@@ -13,8 +13,8 @@ class JeopardyGame(Tk):
         TkPosX=(screenX - TKwidth)/2
         TkPosY=(screenY - TKheight)/2
         self.geometry("%sx%s+%s+%s"%(TKwidth,TKheight,TkPosX,TkPosY))
-        self.maxsize(width="500", height="400")
-        self.minsize(width="500", height="400")
+        self.maxsize(width="590", height="460")
+        self.minsize(width="590", height="460")
         self.create_widgets()
 
     def quitgame(self):
@@ -51,22 +51,22 @@ class MainMenu(BaseFrame):
 
         self.titleScreen=Label(self, font=("Helvetica", 24, "bold"), fg="blue", compound=CENTER)
         self.titleScreen["text"]="This is Jeopardy!"
-        self.titleScreen.grid(row=0, column=2)
+        self.titleScreen.grid(row=0, column=3)
 
-        self.topicbutton = Button(self, compound=CENTER)
+        self.topicbutton = Button(self)
         self.topicbutton["text"] = "Greek Mythology"
         self.topicbutton["command"] = lambda: self.controller.show_frame(Difficulty)
-        self.topicbutton.grid(row=2, column=2, rowspan=2)
+        self.topicbutton.grid(row=1, column=3)
 
-        self.add_topic=Button(self,  compound=CENTER)
+        self.add_topic=Button(self)
         self.add_topic['text']= "Edit/Add topic"
         self.add_topic["command"] = lambda: self.controller.show_frame(AddTopicsPage)
-        self.add_topic.grid(row=4, column=1)
+        self.add_topic.grid(row=2, column=3)
 
         self.quit = Button(self)
         self.quit["text"] = "Quit"
         self.quit["command"] =  self.controller.quitgame
-        self.quit.grid(row=5, column=2)
+        self.quit.grid(row=3, column=3)
 
 ############################################################
 class AddTopicsPage(BaseFrame):
@@ -123,23 +123,20 @@ class AddTopicsPage(BaseFrame):
 
 class Difficulty(BaseFrame):
     def create_widgets(self):
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-        
         self.easybutton = Button(self)
         self.easybutton["text"]= "EASY"
         self.easybutton["command"]= lambda: self.controller.show_frame(PlayGame)
-        self.easybutton.grid(row=1, column=1)
+        self.easybutton.grid(row=1, column=0)
 
         self.mediumbutton = Button(self)
         self.mediumbutton["text"]= "MEDIUM"
         self.mediumbutton["command"]= lambda: self.controller.show_frame(PlayGame)
-        self.mediumbutton.grid(row=1, column=1)
+        self.mediumbutton.grid(row=2, column=0)
 
         self.hardbutton = Button(self)
         self.hardbutton["text"]= "HARD"
         self.hardbutton["command"]= lambda: self.controller.show_frame(PlayGame)
-        self.hardbutton.grid(row=1, column=1)
+        self.hardbutton.grid(row=3, column=0)
 
 ############################################################
 
@@ -148,24 +145,40 @@ class PlayGame(BaseFrame):
         self.mainmenu=Button(self, width=10, font=("Helvetica", 8))
         self.mainmenu['text']= "Main Menu"
         self.mainmenu["command"] = lambda: self.controller.show_frame(MainMenu)
-        self.mainmenu.grid(row=0, column=5, rowspan=2)
-        
-        self.makeButton("title 1", 1, 0)
-        self.makeButton("title 2", 1, 1)
-        self.makeButton("title 3", 1, 2)
-        self.makeButton("title 4", 1, 3)
-        self.makeButton("title 5", 1, 4)
+        self.mainmenu.grid(row=0, column=5)
 
         for col in range(0,5):
-            self.makeButton("1", 2, col)
-            self.makeButton("2", 3, col)
-            self.makeButton("3", 4, col)
-            self.makeButton("4", 5, col)
-            self.makeButton("5", 6, col)
+            photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
+            photo1 = photo1.subsample(3,3)
+            self.button=Button(self, image=photo1)
+            self.button.image=photo1
+            self.button.grid(row=1, column=col)
 
-    def makeButton(self, label, r, c):
-        self.buttontest=Button(self, width=6, text=label).grid(row=r, column=c)
+            photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
+            photo2 = photo2.subsample(3,3)
+            self.button=Button(self, image=photo2)
+            self.button.image=photo2
+            self.button.grid(row=2, column=col)
 
+            photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
+            photo3 = photo3.subsample(3,3)
+            self.button=Button(self, image=photo3)
+            self.button.image=photo3
+            self.button.grid(row=3, column=col)
+
+            photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
+            photo4 = photo4.subsample(3,3)
+            self.button=Button(self, image=photo4)
+            self.button.image=photo4
+            self.button.grid(row=4, column=col)
+
+            photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
+            photo5 = photo5.subsample(3,3)
+            self.button=Button(self, image=photo5)
+            self.button.image=photo5
+            self.button.grid(row=5, column=col)
+
+            self.category_button=Button(self, text="Category 1").grid(row=0, column=col)       
         
         
 conn=sqlite3.connect("/Users/ashleyrojas/Documents/OneDrive - CUNY/Spring 2017/Program Project Seminar for Minors/Myth and Arch Jeopardy Database.db")
