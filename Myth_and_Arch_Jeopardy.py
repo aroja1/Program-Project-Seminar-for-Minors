@@ -3,7 +3,6 @@ import sqlite3
 import tkFont
 from PIL import ImageFont, Image, ImageDraw
 
-
 class JeopardyGame(Tk):
     def __init__(self):
         Tk.__init__(self)
@@ -36,8 +35,21 @@ class JeopardyGame(Tk):
 
     def show_frame(self, cls):
         self.frames[cls].tkraise()
+        
 
-############################################################
+    def twoSequences(self, *functions):
+        def func(*args, **kwargs):
+            for function in functions:
+                function(*args, **kwargs)
+        return func
+
+
+    def switchFrames(self, currentframe, newframe):
+        currentframe.pack_forget()
+        self.show_frame(newframe)
+        
+
+################################################################################
 class BaseFrame(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master, width="590", height="460")
@@ -47,8 +59,9 @@ class BaseFrame(Frame):
     def create_widgets(self):
         raise NotImplementedError
 
-############################################################
+################################################################################
 class MainMenu(BaseFrame):
+
     def create_widgets(self):
 
         self.titleScreen=Label(self, font=("Helvetica", 24, "bold"), fg="blue", width=15, height =1, compound=CENTER)
@@ -57,19 +70,13 @@ class MainMenu(BaseFrame):
 
         self.var=StringVar(self)
         self.var.set("Choose a topic")
-
-        choices=[]
-        results = cursor.execute("SELECT table_name FROM all_tables")
-        for item in results:
-            choices.append(item[0])
         
-        self.menu= OptionMenu(self, self.var, *choices, command = self.TopicChoosen)
+        self.menu= OptionMenu(self, self.var, *AvailableTopics, command = self.TopicChoosen)
         self.menu.config(width=15, height=1)
         self.menu.place(x=222.5, y=60)
+        self.menu.after(1500, self.updateDropdown)
 
-        self.add_topic=Button(self)
-        self.add_topic['text']= "Edit/Add topic"
-        self.add_topic["command"] = lambda: self.controller.show_frame(TopicsPage)
+        self.add_topic=Button(self, text="Edit/Add topic",command= lambda: self.controller.show_frame(TopicsPage))
         self.add_topic.place(x=230, y=100)
 
         self.quit = Button(self)
@@ -78,24 +85,54 @@ class MainMenu(BaseFrame):
         self.quit.place(x=535, y=430)
 
     def TopicChoosen(self, Menu_topic):
-        if Menu_topic == "Greek_Mythology":
+        self.updateDropdown()
+
+##        GameScreen_SQL = """SELECT * FROM {TableName}"""
+##        sql_command= GameScreen_SQL.format(TableName=Menu_topic)
+##        results = cursor.execute(sql_command)
+
+##        global questionanswer
+##        questionanswer=[]
+##        for row in results:
+##            questionanswer.append(row)
+##
+##        for item in questionanswer:
+##            print item
+        topicChosen = Menu_topic
+        
+        if Menu_topic != "none":
             self.controller.show_frame(PlayGame)
-            
 
-############################################################
-class TopicsPage(BaseFrame):
-    def addToDatabase(self):
-        userInput=self.inputBox.get()
-        NewTopicName = userInput.replace(" ", "_")
-
+    def updateDropdown(self):
         results= cursor.execute("SELECT table_name FROM all_tables")
-        AvailableTopics =[]
         for row in results:
             for item in row:
-                AvailableTopics.append(item)
+                if item not in AvailableTopics:
+                    AvailableTopics.append(item)
+                    
+        self.menu= OptionMenu(self, self.var, *AvailableTopics, command = self.TopicChoosen)
+        self.menu.config(width=15, height=1)
+        self.menu.place(x=222.5, y=60)
+        self.menu.after(2000, self.updateDropdown)
+            
+################################################################################
+class TopicsPage(BaseFrame):
+    def addTABLEToDatabase(self):
+##        info=[]
+##        for entry in self.entries:
+##            info.append(entry.get())
+##
+##        newtopicinput = info[0]
+##        newcategoryinput=info[1]
+##        newquestioninput=info[2]
+##        newanswerinput=info[3]
+
+        userInput=self.inputItemEntry.get()
+        NewTopicName = userInput.replace(" ", "_")
+
         if NewTopicName in AvailableTopics:
             self.topicAddedLabel=Label(self.addtopicpage)
-            self.topicAddedLabel["text"]="Topic Already Exsists."
+            self.topicAddedLabel["text"]="Topic Already Exists. Go back to Edit Topic."
             self.topicAddedLabel.pack(side="bottom", anchor="s", fill="x")
         elif NewTopicName not in AvailableTopics:
             NewTopic_SQL = """CREATE TABLE "{TableName}" (tableID INTEGER PRIMARY KEY,
@@ -107,10 +144,19 @@ class TopicsPage(BaseFrame):
             cursor.execute(sql_command)
             sql_command = NewTopic_SQL.format(TableName=NewTopicName)
             cursor.execute(sql_command)
-            self.topicAddedLabel=Label(self)
+            self.topicAddedLabel=Label(self.addtopicpage)
             self.topicAddedLabel["text"]="Topic Added."
             self.topicAddedLabel.pack(side="bottom", anchor="s", fill="x")
         self.topicAddedLabel.after(2000, self.clear_label)
+        self.updateList(AvailableTopics, "Select a topic...")
+
+##        entry=self.entries[0]
+##        entry.pack_forget()
+##        label=self.labels[0]
+##        label["text"]=newtopicinput
+##        label.config(font=("Helvetica", 18, "bold"), fg="black")
+        
+
 
     def clear_label(self):
         self.topicAddedLabel.pack_forget()
@@ -126,8 +172,12 @@ class TopicsPage(BaseFrame):
             sql_command = DeleteTopic_SQL.format(TableName=value)
             cursor.execute(sql_command)
             sql_command2 = DeleteTopicName_SQL.format(TableName=value)
-            print sql_command2
             cursor.execute(sql_command2)
+            conn.commit()
+
+            if value in AvailableTopics:
+                AvailableTopics.remove(value)
+            
 
         except IndexError:
             pass
@@ -143,38 +193,96 @@ class TopicsPage(BaseFrame):
         TKheight = 300
         TkPosX=(screenX - TKwidth)/2
         TkPosY=(screenY - TKheight)/2
-        popupframe.geometry("%sx%s+%s+%s"%(TKwidth,TKheight,TkPosX,TkPosY))
+        popupframe.geometry("%sx%s+%s+%s"%(TKwidth,TKheight,TkPosX,(TkPosY-100)))
 
         if action == 'Add':
             self.addtopicpage= Frame(popupframe)
             self.addtopicpage.pack()
-            
-            self.inputBoxLabel=Label(self.addtopicpage)
-            self.inputBoxLabel["text"]="Enter topic name:"
-            self.inputBoxLabel.pack(side="left")
 
-            self.inputBox=Entry(self.addtopicpage)
-            self.inputBox.pack(side="left")
+            self.inputItemLabel=Label(self.addtopicpage, text="Enter topic name:")
+            self.inputItemLabel.pack(anchor=CENTER)
+
+            self.inputItemEntry=Entry(self.addtopicpage)
+            self.inputItemEntry.pack(anchor=CENTER)
 
             self.enterbutton = Button(self.addtopicpage)
             self.enterbutton["text"] = "Enter"
-            self.enterbutton["command"] = self.addToDatabase
-            self.enterbutton.pack(side="right")
+            self.enterbutton["command"] = self.addTABLEToDatabase
+            self.enterbutton.pack(anchor=CENTER)
+                                    
+
+            self.quit = Button(self.addtopicpage)
+            self.quit["text"] = "Quit"
+            self.quit["command"] =  popupframe.destroy
+            self.quit.pack(side="right",anchor="se")
+
 
         elif action == 'Edit':
-            print 'goodbye'
+            self.edittopicpage= Frame(popupframe)
+            self.edittopicpage.pack()
+            try:
+                index=self.listbox.curselection()
+                value=self.listbox.get(index[0])
+
+                self.listbox= Listbox(self.edittopicpage)
+                self.listbox.pack(side='left')
+                
+                self.listbox.insert(END, "Select a Question or Answer...")
+
+                QuestionsAnswers = []
+                EditTopicTable_SQL="""SELECT Question, Answer FROM {TableName};"""
+                sql_command=EditTopicTable_SQL.format(TableName=value)
+                results = cursor.execute(sql_command)
+                
+                for row in results:
+                    for item in row:
+                        QuestionsAnswers.append(item)
+
+                for item in QuestionsAnswers:
+                    self.listbox.insert(END, item)
+
+            except IndexError:
+                pass
+
+
+##            self.inputItemLabel=Label(self.addtopicpage, text=value, font=("Helvetica", 18, "bold"), fg="black")
+##            self.inputItemLabel.pack(anchor="s")
+            
+##            self.entries=[]
+##            self.labels=[]
+##            for item in ["Enter Category:","Enter Question:", "Enter Answer:"]:
+##
+##                self.inputItemLabel=Label(self.addtopicpage, text=item)
+##                self.inputItemLabel.pack(anchor="s")
+##                
+##                self.labels.append(self.inputItemLabel)
+##
+##                self.inputItemEntry=Entry(self.addtopicpage)
+##                self.inputItemEntry.pack(anchor="s")
+##                
+##                self.entries.append(self.inputItemEntry)
+##
+##            self.var=StringVar(self)
+##            self.var.set("Choose a Difficulty")
+##
+##            self.inputDifficulty= OptionMenu(self.addtopicpage, self.var, *difficulty)
+##            self.inputDifficulty.pack(anchor="s")            
+##
+##            self.enterbutton = Button(self.addtopicpage)
+##            self.enterbutton["text"] = "Enter"
+##            self.enterbutton["command"] = self.addTABLEToDatabase
+##            self.enterbutton.pack(anchor="s")
+
+            self.quit = Button(self.edittopicpage)
+            self.quit["text"] = "Quit"
+            self.quit["command"] =  popupframe.destroy
+            self.quit.pack(side="right",anchor="se")
         
         popupframe.mainloop()
 
     def create_widgets(self):
         self.listbox= Listbox(self)
         self.listbox.place(x=215, y=130)
-
-        results= cursor.execute("SELECT table_name FROM all_tables")
-        AvailableTopics =[]
-        for row in results:
-            for item in row:
-                AvailableTopics.append(item)
         
         self.listbox.insert(END, "Select a topic...")
 
@@ -195,8 +303,21 @@ class TopicsPage(BaseFrame):
         self.mainmenu["command"] = lambda: self.controller.show_frame(MainMenu)
         self.mainmenu.pack(side="bottom", anchor=SE)
 
+    def updateList(self, listname, first_selection):
+        results= cursor.execute("SELECT table_name FROM all_tables")
+        for row in results:
+            for item in row:
+                if item not in AvailableTopics:
+                    AvailableTopics.append(item)
+        self.listbox.delete(0,END)
+        self.listbox.insert(END, first_selection)
+        for item2 in listname:
+            self.listbox.insert(END, item2)
+
+
+
         
-############################################################
+################################################################################
 ##
 ##class Difficulty(BaseFrame):
 ##    def create_widgets(self):
@@ -215,8 +336,7 @@ class TopicsPage(BaseFrame):
 ##        self.hardbutton["command"]= lambda: self.controller.show_frame(PlayGame)
 ##        self.hardbutton.grid(row=3, column=0)
 ##
-##############################################################
-
+################################################################################
 class PlayGame(BaseFrame):
     def create_widgets(self):
         self.mainmenu=Button(self, width=10, font=("Helvetica", 8))
@@ -263,9 +383,23 @@ class PlayGame(BaseFrame):
         for col in range(0,5):
             self.category_label=Label(self, bg="#002290",relief=RAISED,borderwidth=3, text="CATEGORY",fg="white", font=("Baskerville Old Face", 12),height=5, width=15, wraplength=90, justify=CENTER)
             self.category_label.grid(row=0, column=col)       
+################################################################################
         
 conn=sqlite3.connect("/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Myth_and_Arch_Jeopardy_Database.db")
 cursor = conn.cursor()
+
+global AvailableTopics
+AvailableTopics = []
+results= cursor.execute("SELECT table_name FROM all_tables")
+for row in results:
+    for item in row:
+        AvailableTopics.append(item)
+
+global difficulty
+difficulty=['Easy', 'Medium', 'Hard']
+
+global topicChosen
+topicChosen="none"
 
 if __name__=="__main__":
     app= JeopardyGame()
