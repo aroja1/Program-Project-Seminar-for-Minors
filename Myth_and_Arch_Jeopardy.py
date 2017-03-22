@@ -77,7 +77,7 @@ class MainMenu(BaseFrame):
         self.menu.after(1500, self.updateDropdown)
 
         self.add_topic=Button(self, text="Edit/Add topic",command= lambda: self.controller.show_frame(TopicsPage))
-        self.add_topic.place(x=230, y=100)
+        self.add_topic.place(x=240, y=100)
 
         self.quit = Button(self)
         self.quit["text"] = "Quit"
@@ -107,6 +107,7 @@ class MainMenu(BaseFrame):
         results= cursor.execute("SELECT table_name FROM all_tables")
         for row in results:
             for item in row:
+                item = item.replace("_", " ")
                 if item not in AvailableTopics:
                     AvailableTopics.append(item)
                     
@@ -117,7 +118,7 @@ class MainMenu(BaseFrame):
             
 ################################################################################
 class TopicsPage(BaseFrame):
-    def addTABLEToDatabase(self):
+    def addTABLEToDatabase(self, event):
 ##        info=[]
 ##        for entry in self.entries:
 ##            info.append(entry.get())
@@ -130,11 +131,11 @@ class TopicsPage(BaseFrame):
         userInput=self.inputItemEntry.get()
         NewTopicName = userInput.replace(" ", "_")
 
-        if NewTopicName in AvailableTopics:
-            self.topicAddedLabel=Label(self.addtopicpage)
-            self.topicAddedLabel["text"]="Topic Already Exists. Go back to Edit Topic."
-            self.topicAddedLabel.pack(side="bottom", anchor="s", fill="x")
-        elif NewTopicName not in AvailableTopics:
+        if userInput in AvailableTopics:
+            self.label=Label(self)
+            self.label["text"]="Topic Already Exists."
+            self.label.place(x=240, y=410)
+        elif userInput not in AvailableTopics:
             NewTopic_SQL = """CREATE TABLE "{TableName}" (tableID INTEGER PRIMARY KEY,
                             Subject CHAR(20), Question CHAR(50), Answer CHAR(30), Difficulty CHAR(6));"""
             
@@ -144,10 +145,10 @@ class TopicsPage(BaseFrame):
             cursor.execute(sql_command)
             sql_command = NewTopic_SQL.format(TableName=NewTopicName)
             cursor.execute(sql_command)
-            self.topicAddedLabel=Label(self.addtopicpage)
-            self.topicAddedLabel["text"]="Topic Added."
-            self.topicAddedLabel.pack(side="bottom", anchor="s", fill="x")
-        self.topicAddedLabel.after(2000, self.clear_label)
+            self.label=Label(self)
+            self.label["text"]="Topic Added."
+            self.label.place(x=260, y=410)
+        self.label.after(2000, self.clear_label)
         self.updateList(AvailableTopics, "Select a topic...")
 
 ##        entry=self.entries[0]
@@ -156,15 +157,14 @@ class TopicsPage(BaseFrame):
 ##        label["text"]=newtopicinput
 ##        label.config(font=("Helvetica", 18, "bold"), fg="black")
         
-
-
     def clear_label(self):
-        self.topicAddedLabel.pack_forget()
+        self.label.place_forget()
 
     def delete_topic(self):
         try:
             index=self.listbox.curselection()
             value=self.listbox.get(index[0])
+            value=value.replace(" ", "_")
             self.listbox.delete(index)
 
             DeleteTopic_SQL="""DROP TABLE "{TableName}";"""
@@ -177,12 +177,15 @@ class TopicsPage(BaseFrame):
 
             if value in AvailableTopics:
                 AvailableTopics.remove(value)
-            
 
+            popupframe.destroy()
+            
+            
         except IndexError:
             pass
 
     def popup(self, action):
+        global popupframe
         popupframe=Toplevel(self)
         title="""{Action} Topic"""
         title=title.format(Action=action)
@@ -195,37 +198,46 @@ class TopicsPage(BaseFrame):
         TkPosY=(screenY - TKheight)/2
         popupframe.geometry("%sx%s+%s+%s"%(TKwidth,TKheight,TkPosX,(TkPosY-100)))
 
-        if action == 'Add':
-            self.addtopicpage= Frame(popupframe)
-            self.addtopicpage.pack()
-
-            self.inputItemLabel=Label(self.addtopicpage, text="Enter topic name:")
-            self.inputItemLabel.pack(anchor=CENTER)
-
-            self.inputItemEntry=Entry(self.addtopicpage)
-            self.inputItemEntry.pack(anchor=CENTER)
-
-            self.enterbutton = Button(self.addtopicpage)
-            self.enterbutton["text"] = "Enter"
-            self.enterbutton["command"] = self.addTABLEToDatabase
-            self.enterbutton.pack(anchor=CENTER)
-                                    
-
-            self.quit = Button(self.addtopicpage)
-            self.quit["text"] = "Quit"
-            self.quit["command"] =  popupframe.destroy
-            self.quit.pack(side="right",anchor="se")
-
-
-        elif action == 'Edit':
-            self.edittopicpage= Frame(popupframe)
-            self.edittopicpage.pack()
+        if action == 'Delete':
+            self.deletetopicpage= Frame(popupframe)
+            self.deletetopicpage.pack()
             try:
                 index=self.listbox.curselection()
                 value=self.listbox.get(index[0])
 
-                self.listbox= Listbox(self.edittopicpage)
-                self.listbox.pack(side='left')
+                warningmessage = "Are you sure you want to delete {TOPIC}?"
+                warningmessage= warningmessage.format(TOPIC=value)
+
+                self.warningLabel=Label(self.deletetopicpage, text = warningmessage, font=("Helvetica", 24, "bold"), fg="red", wraplength=350)
+                self.warningLabel.pack(side="top")
+
+                self.warningButtonYES=Button(self.deletetopicpage, text="YES", command= self.delete_topic)
+                self.warningButtonYES.pack(side="top")
+
+                self.warningButtonNO=Button(self.deletetopicpage, text="NO", command= popupframe.destroy)
+                self.warningButtonNO.pack(side="top")
+
+
+            except IndexError:
+                pass
+
+        elif action == 'Edit':
+            self.edittopicpage1= Frame(popupframe)
+            self.edittopicpage1.grid(row=1, column=0, sticky=W+E)
+
+            self.edittopicpage2=Frame(popupframe)
+            self.edittopicpage2.grid(row=1, column=1, sticky=W+E)
+
+            self.edittopicpage3=Frame(popupframe)
+            self.edittopicpage3.grid(row=0, columnspan = 2, sticky=W+E)
+            
+            try:
+                index=self.listbox.curselection()
+                value1=self.listbox.get(index[0])
+                value=value1.replace(" ", "_")
+
+                self.listbox= Listbox(self.edittopicpage1)
+                self.listbox.pack(side="top")
                 
                 self.listbox.insert(END, "Select a Question or Answer...")
 
@@ -244,69 +256,98 @@ class TopicsPage(BaseFrame):
             except IndexError:
                 pass
 
-
-##            self.inputItemLabel=Label(self.addtopicpage, text=value, font=("Helvetica", 18, "bold"), fg="black")
-##            self.inputItemLabel.pack(anchor="s")
+            self.inputItemLabel=Label(self.edittopicpage3, text=value1, font=("Helvetica", 18, "bold"), fg="black")
+            self.inputItemLabel.pack(anchor="s")
             
-##            self.entries=[]
-##            self.labels=[]
-##            for item in ["Enter Category:","Enter Question:", "Enter Answer:"]:
-##
-##                self.inputItemLabel=Label(self.addtopicpage, text=item)
-##                self.inputItemLabel.pack(anchor="s")
-##                
-##                self.labels.append(self.inputItemLabel)
-##
-##                self.inputItemEntry=Entry(self.addtopicpage)
-##                self.inputItemEntry.pack(anchor="s")
-##                
-##                self.entries.append(self.inputItemEntry)
-##
-##            self.var=StringVar(self)
-##            self.var.set("Choose a Difficulty")
-##
-##            self.inputDifficulty= OptionMenu(self.addtopicpage, self.var, *difficulty)
-##            self.inputDifficulty.pack(anchor="s")            
-##
-##            self.enterbutton = Button(self.addtopicpage)
+            self.entries=[]
+            self.labels=[]
+            for item in ["Enter Category:","Enter Question:", "Enter Answer:"]:
+
+                self.inputItemLabel=Label(self.edittopicpage2, text=item)
+                self.inputItemLabel.pack(anchor="s")
+                
+                self.labels.append(self.inputItemLabel)
+
+                self.inputItemEntry=Entry(self.edittopicpage2)
+                self.inputItemEntry.pack(anchor="s")
+                
+                self.entries.append(self.inputItemEntry)
+
+            self.var=StringVar(self)
+            self.var.set("Choose a Difficulty")
+
+            self.inputDifficulty= OptionMenu(self.edittopicpage2, self.var, *difficulty)
+            self.inputDifficulty.pack(anchor="s")            
+
+##            self.enterbutton = Button(self.edittopicpage2)
 ##            self.enterbutton["text"] = "Enter"
 ##            self.enterbutton["command"] = self.addTABLEToDatabase
 ##            self.enterbutton.pack(anchor="s")
 
-            self.quit = Button(self.edittopicpage)
+            self.quit = Button(self.edittopicpage2)
             self.quit["text"] = "Quit"
             self.quit["command"] =  popupframe.destroy
             self.quit.pack(side="right",anchor="se")
-        
+
+            self.editselected=Button(self.edittopicpage1, text="Edit selected topic")
+            self.editselected.pack(side="bottom", anchor="s")
+            
+    
         popupframe.mainloop()
 
     def create_widgets(self):
         self.listbox= Listbox(self)
-        self.listbox.place(x=215, y=130)
+        self.listbox.place(x=215, y=15)
         
         self.listbox.insert(END, "Select a topic...")
 
         for item in AvailableTopics:
             self.listbox.insert(END, item)
 
-        self.edittopic =Button(self, text="Edit Topic", command= lambda: self.popup('Edit'))
-        self.edittopic.place(x=260, y=310)
+        self.edittopic =Button(self, text="Edit Topic", command= lambda: self.itemselected('Edit'))
+        self.edittopic.place(x=260, y=330)
 
-        self.addtopic=Button(self, text="Add Topic", command= lambda: self.popup('Add'))
-        self.addtopic.place(x=260, y=335)
+        self.addtopic=Button(self, text="Add Topic", command= self.addnewtopic)
+        self.addtopic.place(x=260, y=355)
 
-        self.deletetopic =Button(self, text="Delete Topic", command=self.delete_topic)
-        self.deletetopic.place(x=254, y=360)
+        self.deletetopic =Button(self, text="Delete Topic", command= lambda: self.itemselected('Delete'))
+        self.deletetopic.place(x=254, y=380)
         
         self.mainmenu=Button(self)
         self.mainmenu['text']= "Back to Main Menu"
         self.mainmenu["command"] = lambda: self.controller.show_frame(MainMenu)
         self.mainmenu.pack(side="bottom", anchor=SE)
 
+    def itemselected(self, action):
+        if action == 'Delete':
+            try:
+                index=self.listbox.curselection()
+                value=self.listbox.get(index[0])
+
+                self.popup(action)
+
+            except IndexError:
+                self.label=Label(self, text="No topic selected. Please select a topic.")
+                self.label.place(x=180, y=410)
+                self.label.after(2000, self.clear_label)
+                
+        if action =='Edit':
+            try:
+                index=self.listbox.curselection()
+                value=self.listbox.get(index[0])
+
+                self.popup(action)
+
+            except IndexError:
+                self.label=Label(self, text="No topic selected. Please select a topic.")
+                self.label.place(x=180, y=410)
+                self.label.after(2000, self.clear_label)
+
     def updateList(self, listname, first_selection):
         results= cursor.execute("SELECT table_name FROM all_tables")
         for row in results:
             for item in row:
+                item = item.replace("_", " ")
                 if item not in AvailableTopics:
                     AvailableTopics.append(item)
         self.listbox.delete(0,END)
@@ -314,9 +355,20 @@ class TopicsPage(BaseFrame):
         for item2 in listname:
             self.listbox.insert(END, item2)
 
+    def addnewtopic(self):
+        self.inputItemLabel=Label(self, text="Enter topic name:")
+        self.inputItemLabel.place(x=100, y=298)
+
+        self.inputItemEntry=Entry(self)
+        self.inputItemEntry.place(x=220, y=297)
+        self.inputItemEntry.bind('<Return>', self.addTABLEToDatabase)
+
+        self.enterbutton = Button(self)
+        self.enterbutton["text"] = "Enter"
+        self.enterbutton.place(x=415, y=297)
+        self.enterbutton.bind('<Button>', self.addTABLEToDatabase)
 
 
-        
 ################################################################################
 ##
 ##class Difficulty(BaseFrame):
@@ -393,6 +445,7 @@ AvailableTopics = []
 results= cursor.execute("SELECT table_name FROM all_tables")
 for row in results:
     for item in row:
+        item = item.replace("_", " ")
         AvailableTopics.append(item)
 
 global difficulty
@@ -400,6 +453,8 @@ difficulty=['Easy', 'Medium', 'Hard']
 
 global topicChosen
 topicChosen="none"
+
+
 
 if __name__=="__main__":
     app= JeopardyGame()
