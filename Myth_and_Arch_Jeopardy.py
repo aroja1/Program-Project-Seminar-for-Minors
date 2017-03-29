@@ -10,7 +10,7 @@ class JeopardyGame(Tk):
         screenX= self.winfo_screenwidth()
         screenY= self.winfo_screenheight()
         TKwidth=590
-        TKheight = 560
+        TKheight = 460
         TkPosX=(screenX - TKwidth)/2
         TkPosY=(screenY - TKheight)/2
         self.geometry("%sx%s+%s+%s"%(TKwidth,TKheight,TkPosX,TkPosY))
@@ -27,7 +27,7 @@ class JeopardyGame(Tk):
         self.container.grid(row=0, column=0, sticky=W+E)
 
         self.frames={}
-        for f in (MainMenu, TopicsPage, PlayGame):
+        for f in (MainMenu, TopicsPage, PlayGame, ButtonClickedinGame):
             frame=f(self.container,self)
             frame.grid(row=0, column=0, sticky=NW+SE)
             self.frames[f]=frame
@@ -137,7 +137,7 @@ class TopicsPage(BaseFrame):
             self.label.place(x=240, y=410)
         elif userInput not in AvailableTopics:
             NewTopic_SQL = """CREATE TABLE "{TableName}" (tableID INTEGER PRIMARY KEY,
-                            Subject CHAR(20), Question CHAR(50), Answer CHAR(30), Difficulty CHAR(6));"""
+                            Category CHAR(20), Question CHAR(50), Answer CHAR(30), Difficulty CHAR(6));"""
             
             TopicNames_SQL = """INSERT INTO all_tables VALUES(NULL, '{TopicName}');"""
 
@@ -162,10 +162,9 @@ class TopicsPage(BaseFrame):
 
     def delete_topic(self):
         try:
-            index=self.listbox.curselection()
-            value=self.listbox.get(index[0])
+            index=self.listboxmain.curselection()
+            value=self.listboxmain.get(index[0])
             value=value.replace(" ", "_")
-            self.listbox.delete(index)
 
             DeleteTopic_SQL="""DROP TABLE "{TableName}";"""
             DeleteTopicName_SQL= """DELETE FROM all_tables WHERE table_name = '{TableName}';"""
@@ -178,8 +177,9 @@ class TopicsPage(BaseFrame):
             if value in AvailableTopics:
                 AvailableTopics.remove(value)
 
+            self.updateList(AvailableTopics, "Select a topic...")
+
             popupframe.destroy()
-            
             
         except IndexError:
             pass
@@ -193,7 +193,7 @@ class TopicsPage(BaseFrame):
         screenX= popupframe.winfo_screenwidth()
         screenY= popupframe.winfo_screenheight()
         TKwidth=400
-        TKheight = 300
+        TKheight = 250
         TkPosX=(screenX - TKwidth)/2
         TkPosY=(screenY - TKheight)/2
         popupframe.geometry("%sx%s+%s+%s"%(TKwidth,TKheight,TkPosX,(TkPosY-100)))
@@ -202,8 +202,8 @@ class TopicsPage(BaseFrame):
             self.deletetopicpage= Frame(popupframe)
             self.deletetopicpage.pack()
             try:
-                index=self.listbox.curselection()
-                value=self.listbox.get(index[0])
+                index=self.listboxmain.curselection()
+                value=self.listboxmain.get(index[0])
 
                 warningmessage = "Are you sure you want to delete {TOPIC}?"
                 warningmessage= warningmessage.format(TOPIC=value)
@@ -222,6 +222,8 @@ class TopicsPage(BaseFrame):
                 pass
 
         elif action == 'Edit':
+            
+##VERSON 1
             self.edittopicpage1= Frame(popupframe)
             self.edittopicpage1.grid(row=1, column=0, sticky=W+E)
 
@@ -229,15 +231,15 @@ class TopicsPage(BaseFrame):
             self.edittopicpage2.grid(row=1, column=1, sticky=W+E)
 
             self.edittopicpage3=Frame(popupframe)
-            self.edittopicpage3.grid(row=0, columnspan = 2, sticky=W+E)
+            self.edittopicpage3.grid(row=0, column=0, columnspan = 2, sticky=W+E)
             
             try:
-                index=self.listbox.curselection()
-                value1=self.listbox.get(index[0])
+                index=self.listboxmain.curselection()
+                value1=self.listboxmain.get(index[0])
                 value=value1.replace(" ", "_")
 
                 self.listbox= Listbox(self.edittopicpage1)
-                self.listbox.pack(side="top")
+                self.listbox.pack(side="top", fill=BOTH)
                 
                 self.listbox.insert(END, "Select a Question or Answer...")
 
@@ -291,18 +293,53 @@ class TopicsPage(BaseFrame):
 
             self.editselected=Button(self.edittopicpage1, text="Edit selected topic")
             self.editselected.pack(side="bottom", anchor="s")
+
+####Verson 2
+##            self.edittopicpage= Frame(popupframe)
+##            self.edittopicpage.pack()
+##
+##            try:
+##                index=self.listboxmain.curselection()
+##                value1=self.listboxmain.get(index[0])
+##                value=value1.replace(" ", "_")
+##
+##                ColumnsForTopic = []
+##                EditTopicTable_SQL="""SELECT * FROM {TableName};"""
+##                sql_command=EditTopicTable_SQL.format(TableName=value)
+##                results = cursor.execute(sql_command)
+##                
+##                for row in results:
+##                    for item in row:
+##                        ColumnsForTopic.append(item)
+##
+##            except IndexError:
+##                pass
+##
+##            mytext=StringVar(value=ColumnsForTopic)
+##
+##            self.TopicLabel=Label(self.edittopicpage, text=value1, font=("Helvetica", 18, "bold"), fg="black")
+##            self.TopicLabel.grid()
+##
+##            self.ListofItemsEntry=Entry(self.edittopicpage, textvariable=mytext, state="readonly")
+##            self.ListofItemsEntry.grid(row=1, sticky='ew')
+##
+##            self.ListofItemsScroll=Scrollbar(self.edittopicpage, orient='horizontal', command=self.ListofItemsEntry.xview)
+##            self.ListofItemsEntry.config(xscrollcommand=self.ListofItemsScroll.set)
+##            self.ListofItemsScroll.grid(row=2, sticky="ew")
+
+            
             
     
         popupframe.mainloop()
 
     def create_widgets(self):
-        self.listbox= Listbox(self)
-        self.listbox.place(x=215, y=15)
+        self.listboxmain= Listbox(self)
+        self.listboxmain.place(x=215, y=15)
         
-        self.listbox.insert(END, "Select a topic...")
+        self.listboxmain.insert(END, "Select a topic...")
 
         for item in AvailableTopics:
-            self.listbox.insert(END, item)
+            self.listboxmain.insert(END, item)
 
         self.edittopic =Button(self, text="Edit Topic", command= lambda: self.itemselected('Edit'))
         self.edittopic.place(x=260, y=330)
@@ -321,8 +358,8 @@ class TopicsPage(BaseFrame):
     def itemselected(self, action):
         if action == 'Delete':
             try:
-                index=self.listbox.curselection()
-                value=self.listbox.get(index[0])
+                index=self.listboxmain.curselection()
+                value=self.listboxmain.get(index[0])
 
                 self.popup(action)
 
@@ -333,8 +370,8 @@ class TopicsPage(BaseFrame):
                 
         if action =='Edit':
             try:
-                index=self.listbox.curselection()
-                value=self.listbox.get(index[0])
+                index=self.listboxmain.curselection()
+                value=self.listboxmain.get(index[0])
 
                 self.popup(action)
 
@@ -350,10 +387,10 @@ class TopicsPage(BaseFrame):
                 item = item.replace("_", " ")
                 if item not in AvailableTopics:
                     AvailableTopics.append(item)
-        self.listbox.delete(0,END)
-        self.listbox.insert(END, first_selection)
+        self.listboxmain.delete(0,END)
+        self.listboxmain.insert(END, first_selection)
         for item2 in listname:
-            self.listbox.insert(END, item2)
+            self.listboxmain.insert(END, item2)
 
     def addnewtopic(self):
         self.inputItemLabel=Label(self, text="Enter topic name:")
@@ -368,6 +405,19 @@ class TopicsPage(BaseFrame):
         self.enterbutton.place(x=415, y=297)
         self.enterbutton.bind('<Button>', self.addTABLEToDatabase)
 
+##    def editExistingQuestions(self, topic):
+##        index=self.listboxmain.curselection()
+##        value1=self.listboxmain.get(index[0])
+##        
+##        info=[]
+##        for entry in self.entries:
+##            info.append(entry.get())
+##
+##        topicinput = info[0]
+##        categoryinput=info[1]
+##        questioninput=info[2]
+##        answerinput=info[3]
+##        difficultyinput=info[4]
 
 ################################################################################
 ##
@@ -404,37 +454,75 @@ class PlayGame(BaseFrame):
         for col in range(0,5):
             photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
             photo1 = photo1.subsample(3,3)
-            self.button=Button(self, image=photo1)
+            self.button=Button(self, image=photo1, command= lambda:self.controller.show_frame(ButtonClickedinGame))
             self.button.image=photo1
             self.button.grid(row=1, column=col)
 
             photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
             photo2 = photo2.subsample(3,3)
-            self.button=Button(self, image=photo2)
+            self.button=Button(self, image=photo2, command= lambda:self.controller.show_frame(ButtonClickedinGame))
             self.button.image=photo2
             self.button.grid(row=2, column=col)
 
             photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
             photo3 = photo3.subsample(3,3)
-            self.button=Button(self, image=photo3)
+            self.button=Button(self, image=photo3, command= lambda:self.controller.show_frame(ButtonClickedinGame))
             self.button.image=photo3
             self.button.grid(row=3, column=col)
 
             photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
             photo4 = photo4.subsample(3,3)
-            self.button=Button(self, image=photo4)
+            self.button=Button(self, image=photo4, command= lambda:self.controller.show_frame(ButtonClickedinGame))
             self.button.image=photo4
             self.button.grid(row=4, column=col)
 
             photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
             photo5 = photo5.subsample(3,3)
-            self.button=Button(self, image=photo5)
+            self.button=Button(self, image=photo5, command= lambda:self.controller.show_frame(ButtonClickedinGame))
             self.button.image=photo5
             self.button.grid(row=5, column=col)
 
         for col in range(0,5):
-            self.category_label=Label(self, bg="#002290",relief=RAISED,borderwidth=3, text="CATEGORY",fg="white", font=("Baskerville Old Face", 12),height=5, width=15, wraplength=90, justify=CENTER)
-            self.category_label.grid(row=0, column=col)       
+            self.category_label=Label(self, bg="#000383",relief=RAISED,borderwidth=3, text="CATEGORY",fg="white", font=("Baskerville Old Face", 12),height=5, width=15, wraplength=90, justify=CENTER)
+            self.category_label.grid(row=0, column=col)
+################################################################################
+
+class ButtonClickedinGame(BaseFrame):
+    def __init__(self, master, controller):
+        Frame.__init__(self, master, width="590", height="460")
+        self.controller=controller
+        self.create_widgets()
+
+
+    def create_widgets(self):
+        self.selectedquestion=Label(self, text= "testing a question question", font=("Baskerville Old Face", 24, "bold"), fg="white", bg="#000383", width= 45, height=11, wraplength=500, justify=CENTER, relief=GROOVE, bd=5)
+##        self.selectedquestion.config(highlightcolor="white", highlightthickness=3)
+        self.selectedquestion.place(x=20, y=25)
+
+        self.answerSlotLabel=Label(self, text="Answer:")
+        self.answerSlotLabel.place(x=50, y=350)
+
+        self.answerSlot=Entry(self)
+        self.answerSlot.place(x=110, y=349)
+        self.answerSlot.bind('<Return>', self.checkAnswer)
+
+        self.answerSlotButton = Button(self, text="Enter")
+        self.answerSlotButton.place(x=302, y=349)
+        self.answerSlotButton.bind('<Button>', self.checkAnswer)
+
+
+    def checkAnswer(self, event):
+
+        userInput=self.answerSlot.get()
+        
+        if userInput == "Yes":
+            print 'yes'
+
+        else:
+            print 'no'
+        
+
+    
 ################################################################################
         
 conn=sqlite3.connect("/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Myth_and_Arch_Jeopardy_Database.db")
