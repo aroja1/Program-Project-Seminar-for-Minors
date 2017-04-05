@@ -1,4 +1,5 @@
 from Tkinter import *
+from ttk import Treeview
 import sqlite3
 import tkFont
 from PIL import ImageFont, Image, ImageDraw
@@ -61,7 +62,6 @@ class BaseFrame(Frame):
 
 ################################################################################
 class MainMenu(BaseFrame):
-
     def create_widgets(self):
 
         self.titleScreen=Label(self, font=("Helvetica", 24, "bold"), fg="blue", width=15, height =1, compound=CENTER)
@@ -90,7 +90,7 @@ class MainMenu(BaseFrame):
 ##        GameScreen_SQL = """SELECT * FROM {TableName}"""
 ##        sql_command= GameScreen_SQL.format(TableName=Menu_topic)
 ##        results = cursor.execute(sql_command)
-
+        
 ##        global questionanswer
 ##        questionanswer=[]
 ##        for row in results:
@@ -192,7 +192,7 @@ class TopicsPage(BaseFrame):
         popupframe.title(title)
         screenX= popupframe.winfo_screenwidth()
         screenY= popupframe.winfo_screenheight()
-        TKwidth=400
+        TKwidth=600
         TKheight = 250
         TkPosX=(screenX - TKwidth)/2
         TkPosY=(screenY - TKheight)/2
@@ -222,114 +222,121 @@ class TopicsPage(BaseFrame):
                 pass
 
         elif action == 'Edit':
+            self.edittopicpage= Frame(popupframe)
+            self.edittopicpage.pack()
             
-##VERSON 1
-            self.edittopicpage1= Frame(popupframe)
-            self.edittopicpage1.grid(row=1, column=0, sticky=W+E)
+            self.tree= Treeview(self.edittopicpage, columns=('Category', 'Question', 'Answer', 'Difficulty'), show='headings', selectmode="browse")
 
-            self.edittopicpage2=Frame(popupframe)
-            self.edittopicpage2.grid(row=1, column=1, sticky=W+E)
-
-            self.edittopicpage3=Frame(popupframe)
-            self.edittopicpage3.grid(row=0, column=0, columnspan = 2, sticky=W+E)
+            self.tree.heading("Category", text="Category")
+            self.tree.column('Category', width =55,anchor="center")
             
+            self.tree.heading("Question", text= "Question")
+            self.tree.column('Question', minwidth=150)
+            
+            self.tree.heading("Answer", text= "Answer")
+            self.tree.column('Answer', width=100)
+            
+            self.tree.heading("Difficulty", text= "Difficulty")
+            self.tree.column('Difficulty', width =65, anchor="center")
+
+
             try:
                 index=self.listboxmain.curselection()
                 value1=self.listboxmain.get(index[0])
                 value=value1.replace(" ", "_")
-
-                self.listbox= Listbox(self.edittopicpage1)
-                self.listbox.pack(side="top", fill=BOTH)
-                
-                self.listbox.insert(END, "Select a Question or Answer...")
-
-                QuestionsAnswers = []
-                EditTopicTable_SQL="""SELECT Question, Answer FROM {TableName};"""
+                RowsInTable = []
+                EditTopicTable_SQL="""SELECT * FROM {TableName};"""
                 sql_command=EditTopicTable_SQL.format(TableName=value)
                 results = cursor.execute(sql_command)
                 
                 for row in results:
-                    for item in row:
-                        QuestionsAnswers.append(item)
-
-                for item in QuestionsAnswers:
-                    self.listbox.insert(END, item)
-
+                    RowsInTable.append(row)
+                        
             except IndexError:
                 pass
 
-            self.inputItemLabel=Label(self.edittopicpage3, text=value1, font=("Helvetica", 18, "bold"), fg="black")
-            self.inputItemLabel.pack(anchor="s")
+            for item in RowsInTable:
+                category=item[1]
+                question=item[2]
+                answer=item[3]
+                difficulty=item[4]
+
+                self.tree.insert('', 'end', values=(category, question, answer, difficulty))
             
-            self.entries=[]
-            self.labels=[]
-            for item in ["Enter Category:","Enter Question:", "Enter Answer:"]:
+            self.tree.pack(side='left')
 
-                self.inputItemLabel=Label(self.edittopicpage2, text=item)
-                self.inputItemLabel.pack(anchor="s")
-                
-                self.labels.append(self.inputItemLabel)
-
-                self.inputItemEntry=Entry(self.edittopicpage2)
-                self.inputItemEntry.pack(anchor="s")
-                
-                self.entries.append(self.inputItemEntry)
-
-            self.var=StringVar(self)
-            self.var.set("Choose a Difficulty")
-
-            self.inputDifficulty= OptionMenu(self.edittopicpage2, self.var, *difficulty)
-            self.inputDifficulty.pack(anchor="s")            
-
-##            self.enterbutton = Button(self.edittopicpage2)
-##            self.enterbutton["text"] = "Enter"
-##            self.enterbutton["command"] = self.addTABLEToDatabase
-##            self.enterbutton.pack(anchor="s")
-
-            self.quit = Button(self.edittopicpage2)
-            self.quit["text"] = "Quit"
-            self.quit["command"] =  popupframe.destroy
-            self.quit.pack(side="right",anchor="se")
-
-            self.editselected=Button(self.edittopicpage1, text="Edit selected topic")
-            self.editselected.pack(side="bottom", anchor="s")
-
-####Verson 2
-##            self.edittopicpage= Frame(popupframe)
-##            self.edittopicpage.pack()
+            
+####VERSON 1
+##            self.edittopicpage1= Frame(popupframe)
+##            self.edittopicpage1.grid(row=1, column=0, sticky=W+E)
 ##
+##            self.edittopicpage2=Frame(popupframe)
+##            self.edittopicpage2.grid(row=1, column=1, sticky=W+E)
+##
+##            self.edittopicpage3=Frame(popupframe)
+##            self.edittopicpage3.grid(row=0, column=0, columnspan = 2, sticky=W+E)
+##            
 ##            try:
 ##                index=self.listboxmain.curselection()
 ##                value1=self.listboxmain.get(index[0])
 ##                value=value1.replace(" ", "_")
 ##
-##                ColumnsForTopic = []
-##                EditTopicTable_SQL="""SELECT * FROM {TableName};"""
+##                self.listbox= Listbox(self.edittopicpage1)
+##                self.listbox.pack(side="top", fill=BOTH)
+##                
+##                self.listbox.insert(END, "Select a Question or Answer...")
+##
+##                QuestionsAnswers = []
+##                EditTopicTable_SQL="""SELECT Question, Answer FROM {TableName};"""
 ##                sql_command=EditTopicTable_SQL.format(TableName=value)
 ##                results = cursor.execute(sql_command)
 ##                
 ##                for row in results:
 ##                    for item in row:
-##                        ColumnsForTopic.append(item)
+##                        QuestionsAnswers.append(item)
+##
+##                for item in QuestionsAnswers:
+##                    self.listbox.insert(END, item)
 ##
 ##            except IndexError:
 ##                pass
 ##
-##            mytext=StringVar(value=ColumnsForTopic)
+##            self.inputItemLabel=Label(self.edittopicpage3, text=value1, font=("Helvetica", 18, "bold"), fg="black")
+##            self.inputItemLabel.pack(anchor="s")
+##            
+##            self.entries=[]
+##            self.labels=[]
+##            for item in ["Enter Category:","Enter Question:", "Enter Answer:"]:
 ##
-##            self.TopicLabel=Label(self.edittopicpage, text=value1, font=("Helvetica", 18, "bold"), fg="black")
-##            self.TopicLabel.grid()
+##                self.inputItemLabel=Label(self.edittopicpage2, text=item)
+##                self.inputItemLabel.pack(anchor="s")
+##                
+##                self.labels.append(self.inputItemLabel)
 ##
-##            self.ListofItemsEntry=Entry(self.edittopicpage, textvariable=mytext, state="readonly")
-##            self.ListofItemsEntry.grid(row=1, sticky='ew')
+##                self.inputItemEntry=Entry(self.edittopicpage2)
+##                self.inputItemEntry.pack(anchor="s")
+##                
+##                self.entries.append(self.inputItemEntry)
 ##
-##            self.ListofItemsScroll=Scrollbar(self.edittopicpage, orient='horizontal', command=self.ListofItemsEntry.xview)
-##            self.ListofItemsEntry.config(xscrollcommand=self.ListofItemsScroll.set)
-##            self.ListofItemsScroll.grid(row=2, sticky="ew")
-
-            
-            
-    
+##            self.var=StringVar(self)
+##            self.var.set("Choose a Difficulty")
+##
+##            self.inputDifficulty= OptionMenu(self.edittopicpage2, self.var, *difficulty)
+##            self.inputDifficulty.pack(anchor="s")            
+##
+####            self.enterbutton = Button(self.edittopicpage2)
+####            self.enterbutton["text"] = "Enter"
+####            self.enterbutton["command"] = self.addTABLEToDatabase
+####            self.enterbutton.pack(anchor="s")
+##
+##            self.quit = Button(self.edittopicpage2)
+##            self.quit["text"] = "Quit"
+##            self.quit["command"] =  popupframe.destroy
+##            self.quit.pack(side="right",anchor="se")
+##
+##            self.editselected=Button(self.edittopicpage1, text="Edit selected topic")
+##            self.editselected.pack(side="bottom", anchor="s")
+  
         popupframe.mainloop()
 
     def create_widgets(self):
