@@ -36,13 +36,6 @@ class JeopardyGame(Tk):
 
     def show_frame(self, cls):
         self.frames[cls].tkraise()
-        
-
-    def twoSequences(self, *functions):
-        def func(*args, **kwargs):
-            for function in functions:
-                function(*args, **kwargs)
-        return func
 
 
     def switchFrames(self, currentframe, newframe):
@@ -62,6 +55,11 @@ class BaseFrame(Frame):
 
 ################################################################################
 class MainMenu(BaseFrame):
+    def __init__(self, master, controller):
+        Frame.__init__(self, master, width="590", height="460")
+        self.controller=controller
+        self.create_widgets()
+        
     def create_widgets(self):
 
         self.titleScreen=Label(self, font=("Helvetica", 24, "bold"), fg="blue", width=15, height =1, compound=CENTER)
@@ -118,6 +116,11 @@ class MainMenu(BaseFrame):
             
 ################################################################################
 class TopicsPage(BaseFrame):
+    def __init__(self, master, controller):
+        Frame.__init__(self, master, width="590", height="460")
+        self.controller=controller
+        self.create_widgets()
+        
     def addTABLEToDatabase(self, event):
 ##        info=[]
 ##        for entry in self.entries:
@@ -221,128 +224,15 @@ class TopicsPage(BaseFrame):
             except IndexError:
                 pass
 
-        elif action == 'Edit':
-            self.edittopicpage= Frame(popupframe)
-            self.edittopicpage.pack()
-            
-            self.tree= Treeview(self.edittopicpage, columns=('Category', 'Question', 'Answer', 'Difficulty'), show='headings', selectmode="browse")
-
-            self.tree.heading("Category", text="Category")
-            self.tree.column('Category', width =55,anchor="center")
-            
-            self.tree.heading("Question", text= "Question")
-            self.tree.column('Question', minwidth=150)
-            
-            self.tree.heading("Answer", text= "Answer")
-            self.tree.column('Answer', width=100)
-            
-            self.tree.heading("Difficulty", text= "Difficulty")
-            self.tree.column('Difficulty', width =65, anchor="center")
-
-
-            try:
-                index=self.listboxmain.curselection()
-                value1=self.listboxmain.get(index[0])
-                value=value1.replace(" ", "_")
-                RowsInTable = []
-                EditTopicTable_SQL="""SELECT * FROM {TableName};"""
-                sql_command=EditTopicTable_SQL.format(TableName=value)
-                results = cursor.execute(sql_command)
-                
-                for row in results:
-                    RowsInTable.append(row)
-                        
-            except IndexError:
-                pass
-
-            for item in RowsInTable:
-                category=item[1]
-                question=item[2]
-                answer=item[3]
-                difficulty=item[4]
-
-                self.tree.insert('', 'end', values=(category, question, answer, difficulty))
-            
-            self.tree.pack(side='left')
-
-            
-####VERSON 1
-##            self.edittopicpage1= Frame(popupframe)
-##            self.edittopicpage1.grid(row=1, column=0, sticky=W+E)
-##
-##            self.edittopicpage2=Frame(popupframe)
-##            self.edittopicpage2.grid(row=1, column=1, sticky=W+E)
-##
-##            self.edittopicpage3=Frame(popupframe)
-##            self.edittopicpage3.grid(row=0, column=0, columnspan = 2, sticky=W+E)
-##            
-##            try:
-##                index=self.listboxmain.curselection()
-##                value1=self.listboxmain.get(index[0])
-##                value=value1.replace(" ", "_")
-##
-##                self.listbox= Listbox(self.edittopicpage1)
-##                self.listbox.pack(side="top", fill=BOTH)
-##                
-##                self.listbox.insert(END, "Select a Question or Answer...")
-##
-##                QuestionsAnswers = []
-##                EditTopicTable_SQL="""SELECT Question, Answer FROM {TableName};"""
-##                sql_command=EditTopicTable_SQL.format(TableName=value)
-##                results = cursor.execute(sql_command)
-##                
-##                for row in results:
-##                    for item in row:
-##                        QuestionsAnswers.append(item)
-##
-##                for item in QuestionsAnswers:
-##                    self.listbox.insert(END, item)
-##
-##            except IndexError:
-##                pass
-##
-##            self.inputItemLabel=Label(self.edittopicpage3, text=value1, font=("Helvetica", 18, "bold"), fg="black")
-##            self.inputItemLabel.pack(anchor="s")
-##            
-##            self.entries=[]
-##            self.labels=[]
-##            for item in ["Enter Category:","Enter Question:", "Enter Answer:"]:
-##
-##                self.inputItemLabel=Label(self.edittopicpage2, text=item)
-##                self.inputItemLabel.pack(anchor="s")
-##                
-##                self.labels.append(self.inputItemLabel)
-##
-##                self.inputItemEntry=Entry(self.edittopicpage2)
-##                self.inputItemEntry.pack(anchor="s")
-##                
-##                self.entries.append(self.inputItemEntry)
-##
-##            self.var=StringVar(self)
-##            self.var.set("Choose a Difficulty")
-##
-##            self.inputDifficulty= OptionMenu(self.edittopicpage2, self.var, *difficulty)
-##            self.inputDifficulty.pack(anchor="s")            
-##
-####            self.enterbutton = Button(self.edittopicpage2)
-####            self.enterbutton["text"] = "Enter"
-####            self.enterbutton["command"] = self.addTABLEToDatabase
-####            self.enterbutton.pack(anchor="s")
-##
-##            self.quit = Button(self.edittopicpage2)
-##            self.quit["text"] = "Quit"
-##            self.quit["command"] =  popupframe.destroy
-##            self.quit.pack(side="right",anchor="se")
-##
-##            self.editselected=Button(self.edittopicpage1, text="Edit selected topic")
-##            self.editselected.pack(side="bottom", anchor="s")
+        if action == 'Error':
+            pass
   
         popupframe.mainloop()
 
     def create_widgets(self):
         self.listboxmain= Listbox(self)
         self.listboxmain.place(x=215, y=15)
-        
+
         self.listboxmain.insert(END, "Select a topic...")
 
         for item in AvailableTopics:
@@ -351,7 +241,7 @@ class TopicsPage(BaseFrame):
         self.edittopic =Button(self, text="Edit Topic", command= lambda: self.itemselected('Edit'))
         self.edittopic.place(x=260, y=330)
 
-        self.addtopic=Button(self, text="Add Topic", command= self.addnewtopic)
+        self.addtopic=Button(self, text="Add Topic", command= lambda: self.itemselected('Add'))
         self.addtopic.place(x=260, y=355)
 
         self.deletetopic =Button(self, text="Delete Topic", command= lambda: self.itemselected('Delete'))
@@ -359,9 +249,31 @@ class TopicsPage(BaseFrame):
         
         self.mainmenu=Button(self)
         self.mainmenu['text']= "Back to Main Menu"
-        self.mainmenu["command"] = lambda: self.controller.show_frame(MainMenu)
+        self.mainmenu["command"] = self.back_to_mainmenu()
         self.mainmenu.pack(side="bottom", anchor=SE)
 
+    def back_to_mainmenu(self):
+        try:
+            self.scrollbar.pack_forget()
+            self.tree.pack_forget()
+            self.mainmenu.place_forget()
+            self.topicpage.place_forget()
+        except AttributeError:
+            pass
+
+        self.controller.show_frame(MainMenu)
+
+    def back_to_topicpage(self):
+        try:
+            self.scrollbar.pack_forget()
+            self.tree.pack_forget()
+            self.mainmenu.place_forget()
+            self.topicpage.place_forget()
+        except AttributeError:
+            pass
+
+        self.controller.show_frame(TopicsPage)
+        
     def itemselected(self, action):
         if action == 'Delete':
             try:
@@ -377,15 +289,25 @@ class TopicsPage(BaseFrame):
                 
         if action =='Edit':
             try:
-                index=self.listboxmain.curselection()
-                value=self.listboxmain.get(index[0])
-
-                self.popup(action)
+                self.Edit_Topic()
 
             except IndexError:
                 self.label=Label(self, text="No topic selected. Please select a topic.")
                 self.label.place(x=180, y=410)
                 self.label.after(2000, self.clear_label)
+
+        if action == 'Add':
+            self.inputItemLabel=Label(self, text="Enter topic name:")
+            self.inputItemLabel.place(x=100, y=298)
+
+            self.inputItemEntry=Entry(self)
+            self.inputItemEntry.place(x=220, y=297)
+            self.inputItemEntry.bind('<Return>', self.addTABLEToDatabase)
+
+            self.enterbutton = Button(self)
+            self.enterbutton["text"] = "Enter"
+            self.enterbutton.place(x=415, y=297)
+            self.enterbutton.bind('<Button>', self.addTABLEToDatabase)
 
     def updateList(self, listname, first_selection):
         results= cursor.execute("SELECT table_name FROM all_tables")
@@ -399,18 +321,75 @@ class TopicsPage(BaseFrame):
         for item2 in listname:
             self.listboxmain.insert(END, item2)
 
-    def addnewtopic(self):
-        self.inputItemLabel=Label(self, text="Enter topic name:")
-        self.inputItemLabel.place(x=100, y=298)
 
-        self.inputItemEntry=Entry(self)
-        self.inputItemEntry.place(x=220, y=297)
-        self.inputItemEntry.bind('<Return>', self.addTABLEToDatabase)
+    def Edit_Topic(self):
+        self.listboxmain.place_forget()
+        self.edittopic.place_forget()
+        self.addtopic.place_forget()
+        self.deletetopic.place_forget()
+        self.mainmenu.pack_forget()
+        
+        try:
+            self.inputItemLabel.place_forget()
+            self.inputItemEntry.place_forget()
+            self.enterbutton.place_forget()
+        except AttributeError:
+            pass
 
-        self.enterbutton = Button(self)
-        self.enterbutton["text"] = "Enter"
-        self.enterbutton.place(x=415, y=297)
-        self.enterbutton.bind('<Button>', self.addTABLEToDatabase)
+        self.scrollbar= Scrollbar(self)
+        self.scrollbar.pack(side=RIGHT, fill=Y, anchor=N)
+        
+        self.tree= Treeview(self, columns=('Category', 'Question', 'Answer', 'Difficulty'), show='headings', selectmode="browse", yscrollcommand=self.scrollbar.set)
+
+        self.tree.heading("Category", text="Category")
+        self.tree.column('Category', width =55,anchor="center")
+        
+        self.tree.heading("Question", text= "Question")
+        self.tree.column('Question', width=290)
+        
+        self.tree.heading("Answer", text= "Answer")
+        self.tree.column('Answer', width=140)
+        
+        self.tree.heading("Difficulty", text= "Difficulty")
+        self.tree.column('Difficulty', width =65, anchor="center")
+
+        self.scrollbar.config(command=self.tree.yview)
+        
+        try:
+            index=self.listboxmain.curselection()
+            value1=self.listboxmain.get(index[0])
+            value=value1.replace(" ", "_")
+
+            RowsInTable=[]
+            EditTopicTable_SQL="""SELECT * FROM {TableName};"""
+            sql_command=EditTopicTable_SQL.format(TableName=value)
+            results = cursor.execute(sql_command)
+            
+            for row in results:
+                RowsInTable.append(row)
+                    
+        except IndexError:
+            pass
+
+        for item in RowsInTable:
+            category=item[1]
+            question=item[2]
+            answer=item[3]
+            difficulty=item[4]
+
+            self.tree.insert('', 'end', values=(category, question, answer, difficulty))
+        
+        self.tree.pack(side=LEFT, anchor=N)
+
+        self.mainmenu=Button(self)
+        self.mainmenu['text']= "Back to Main Menu"
+        self.mainmenu["command"] = lambda: self.back_to_mainmenu()
+        self.mainmenu.place(x=400, y=425)
+
+        self.topicpage=Button(self)
+        self.topicpage['text']= "Back to Topic Page"
+        self.topicpage["command"] = lambda: self.back_to_topicpage()
+        self.topicpage.place(x=400, y=400)
 
 ##    def editExistingQuestions(self, topic):
 ##        index=self.listboxmain.curselection()
@@ -425,6 +404,11 @@ class TopicsPage(BaseFrame):
 ##        questioninput=info[2]
 ##        answerinput=info[3]
 ##        difficultyinput=info[4]
+
+    def topicframe(self):
+        self.create_widgets()
+        self.scrollbar.place_forget()
+        self.tree.place_forget()
 
 ################################################################################
 ##
@@ -447,6 +431,11 @@ class TopicsPage(BaseFrame):
 ##
 ################################################################################
 class PlayGame(BaseFrame):
+    def __init__(self, master, controller):
+        Frame.__init__(self, master, width="590", height="460")
+        self.controller=controller
+        self.create_widgets()
+        
     def create_widgets(self):
         self.mainmenu=Button(self, width=10, font=("Helvetica", 8))
         self.mainmenu['text']= "Main Menu"
@@ -548,6 +537,7 @@ difficulty=['Easy', 'Medium', 'Hard']
 
 global topicChosen
 topicChosen="none"
+
 
 
 
