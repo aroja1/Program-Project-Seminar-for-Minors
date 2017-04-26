@@ -42,19 +42,8 @@ class JeopardyGame(Tk):
         currentframe.pack_forget()
         self.show_frame(newframe)
         
-
 ################################################################################
-class BaseFrame(Frame):
-    def __init__(self, master, controller):
-        Frame.__init__(self, master, width="590", height="460")
-        self.controller=controller
-        self.create_widgets()
-
-    def create_widgets(self):
-        raise NotImplementedError
-
-################################################################################
-class MainMenu(BaseFrame):
+class MainMenu(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master, width="590", height="460")
         self.controller=controller
@@ -82,24 +71,27 @@ class MainMenu(BaseFrame):
         self.quit["command"] =  self.controller.quitgame
         self.quit.place(x=535, y=430)
 
+## topic chosen to start the game and go to game frame
+
     def TopicChoosen(self, Menu_topic):
         self.updateDropdown()
 
-##        GameScreen_SQL = """SELECT * FROM {TableName}"""
-##        sql_command= GameScreen_SQL.format(TableName=Menu_topic)
-##        results = cursor.execute(sql_command)
+        Menu_topic = Menu_topic.replace(" ", "_")
+
+        GameScreen_SQL = """SELECT * FROM {TableName}"""
+        sql_command= GameScreen_SQL.format(TableName=Menu_topic)
+        results = cursor.execute(sql_command)
         
-##        global questionanswer
-##        questionanswer=[]
-##        for row in results:
-##            questionanswer.append(row)
-##
-##        for item in questionanswer:
-##            print item
+        questionanswer=[]
+        for row in results:
+            self.questionanswer.append(row)
+
         topicChosen = Menu_topic
         
-        if Menu_topic != "none":
+        if topicChosen != "none":
             self.controller.show_frame(PlayGame)
+
+## dropdown menu updated just in case a topic is changed
 
     def updateDropdown(self):
         results= cursor.execute("SELECT table_name FROM all_tables")
@@ -115,12 +107,14 @@ class MainMenu(BaseFrame):
         self.menu.after(2000, self.updateDropdown)
             
 ################################################################################
-class TopicsPage(BaseFrame):
+class TopicsPage(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master, width="590", height="460")
         self.controller=controller
         self.create_widgets()
-        
+
+## adding a new topic to the game
+
     def addTABLEToDatabase(self, event):
 ##        info=[]
 ##        for entry in self.entries:
@@ -162,6 +156,8 @@ class TopicsPage(BaseFrame):
         
     def clear_label(self):
         self.label.place_forget()
+
+## deleteing a topic from the game
 
     def delete_topic(self):
         try:
@@ -249,10 +245,12 @@ class TopicsPage(BaseFrame):
         
         self.mainmenu=Button(self)
         self.mainmenu['text']= "Back to Main Menu"
-        self.mainmenu["command"] = self.back_to_mainmenu()
+        self.mainmenu["command"] = self.back_to(MainMenu)
         self.mainmenu.pack(side="bottom", anchor=SE)
 
-    def back_to_mainmenu(self):
+## going back to previous frames with their widgets
+
+    def back_to(self, frame):
         try:
             self.scrollbar.pack_forget()
             self.tree.pack_forget()
@@ -260,19 +258,22 @@ class TopicsPage(BaseFrame):
             self.topicpage.place_forget()
         except AttributeError:
             pass
+        self.listboxmain.place(x=215, y=15)
+        self.edittopic.place(x=260, y=330)
+        self.addtopic.place(x=260, y=355)
+        self.deletetopic.place(x=254, y=380)
+        self.mainmenu.pack(side="bottom", anchor=SE)
 
-        self.controller.show_frame(MainMenu)
-
-    def back_to_topicpage(self):
         try:
-            self.scrollbar.pack_forget()
-            self.tree.pack_forget()
-            self.mainmenu.place_forget()
-            self.topicpage.place_forget()
+            self.inputItemLabel.place(x=100, y=298)
+            self.inputItemEntry.place(x=220, y=297)
+            self.enterbutton.place(x=415, y=297)
         except AttributeError:
             pass
+        
+        self.controller.show_frame(frame)
 
-        self.controller.show_frame(TopicsPage)
+## checking to see if there is an item selected. if not, error message shows
         
     def itemselected(self, action):
         if action == 'Delete':
@@ -321,6 +322,7 @@ class TopicsPage(BaseFrame):
         for item2 in listname:
             self.listboxmain.insert(END, item2)
 
+## edit frame shows with detailed information of what the topic has stored
 
     def Edit_Topic(self):
         self.listboxmain.place_forget()
@@ -328,6 +330,7 @@ class TopicsPage(BaseFrame):
         self.addtopic.place_forget()
         self.deletetopic.place_forget()
         self.mainmenu.pack_forget()
+        
         
         try:
             self.inputItemLabel.place_forget()
@@ -378,17 +381,19 @@ class TopicsPage(BaseFrame):
             difficulty=item[4]
 
             self.tree.insert('', 'end', values=(category, question, answer, difficulty))
+
+        self.tree.bind("<Double-1>", self.DoubleClick)
         
         self.tree.pack(side=LEFT, anchor=N)
 
         self.mainmenu=Button(self)
         self.mainmenu['text']= "Back to Main Menu"
-        self.mainmenu["command"] = lambda: self.back_to_mainmenu()
+        self.mainmenu["command"] = lambda: self.back_to(MainMenu)
         self.mainmenu.place(x=400, y=425)
 
         self.topicpage=Button(self)
         self.topicpage['text']= "Back to Topic Page"
-        self.topicpage["command"] = lambda: self.back_to_topicpage()
+        self.topicpage["command"] = lambda: self.back_to(TopicsPage)
         self.topicpage.place(x=400, y=400)
 
 ##    def editExistingQuestions(self, topic):
@@ -405,10 +410,11 @@ class TopicsPage(BaseFrame):
 ##        answerinput=info[3]
 ##        difficultyinput=info[4]
 
-    def topicframe(self):
-        self.create_widgets()
-        self.scrollbar.place_forget()
-        self.tree.place_forget()
+
+    def DoubleClick(self,event):
+        current = self.tree.focus()
+        item = self.tree.item(current)
+        print item['values']
 
 ################################################################################
 ##
@@ -430,7 +436,7 @@ class TopicsPage(BaseFrame):
 ##        self.hardbutton.grid(row=3, column=0)
 ##
 ################################################################################
-class PlayGame(BaseFrame):
+class PlayGame(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master, width="590", height="460")
         self.controller=controller
@@ -481,14 +487,14 @@ class PlayGame(BaseFrame):
         for col in range(0,5):
             self.category_label=Label(self, bg="#000383",relief=RAISED,borderwidth=3, text="CATEGORY",fg="white", font=("Baskerville Old Face", 12),height=5, width=15, wraplength=90, justify=CENTER)
             self.category_label.grid(row=0, column=col)
+
 ################################################################################
 
-class ButtonClickedinGame(BaseFrame):
+class ButtonClickedinGame(Frame):
     def __init__(self, master, controller):
         Frame.__init__(self, master, width="590", height="460")
         self.controller=controller
         self.create_widgets()
-
 
     def create_widgets(self):
         self.selectedquestion=Label(self, text= "testing a question question", font=("Baskerville Old Face", 24, "bold"), fg="white", bg="#000383", width= 45, height=11, wraplength=500, justify=CENTER, relief=GROOVE, bd=5)
@@ -505,6 +511,11 @@ class ButtonClickedinGame(BaseFrame):
         self.answerSlotButton = Button(self, text="Enter")
         self.answerSlotButton.place(x=302, y=349)
         self.answerSlotButton.bind('<Button>', self.checkAnswer)
+
+        self.mainmenu=Button(self)
+        self.mainmenu['text']= "Back to Main Menu"
+        self.mainmenu["command"] = lambda:self.controller.show_frame(MainMenu)
+        self.mainmenu.place(x=400, y=425)
 
 
     def checkAnswer(self, event):
