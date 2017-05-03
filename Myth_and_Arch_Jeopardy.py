@@ -3,6 +3,7 @@ from ttk import Treeview
 import sqlite3
 import tkFont
 from PIL import ImageFont, Image, ImageDraw
+import random
 
 class JeopardyGame(Tk):
     def __init__(self):
@@ -28,7 +29,7 @@ class JeopardyGame(Tk):
         self.container.grid(row=0, column=0, sticky=W+E)
 
         self.frames={}
-        for f in (MainMenu, TopicsPage, PlayGame, ButtonClickedinGame):
+        for f in (MainMenu, TopicsPage):
             frame=f(self.container,self)
             frame.grid(row=0, column=0, sticky=NW+SE)
             self.frames[f]=frame
@@ -43,7 +44,16 @@ class JeopardyGame(Tk):
         self.show_frame(newframe)
         
 ################################################################################
-class MainMenu(Frame):
+class BaseFrame(Frame):
+    def __init__(self, master, controller):
+        Frame.__init__(self, master, width="590", height="460")
+        self.controller=controller
+        self.create_widgets()
+
+    def create_widgets(self):
+        raise NotImplementedError
+################################################################################
+class MainMenu(BaseFrame):
     def __init__(self, master, controller):
         Frame.__init__(self, master, width="590", height="460")
         self.controller=controller
@@ -74,7 +84,6 @@ class MainMenu(Frame):
 ## topic chosen to start the game and go to game frame
 
     def TopicChoosen(self, Menu_topic):
-        self.updateDropdown()
 
         Menu_topic = Menu_topic.replace(" ", "_")
 
@@ -82,14 +91,50 @@ class MainMenu(Frame):
         sql_command= GameScreen_SQL.format(TableName=Menu_topic)
         results = cursor.execute(sql_command)
         
-        questionanswer=[]
+        self.questionanswer=[]
         for row in results:
             self.questionanswer.append(row)
 
         topicChosen = Menu_topic
         
         if topicChosen != "none":
-            self.controller.show_frame(PlayGame)
+##            self.controller.show_frame(PlayGame)
+            self.PlayGame()
+
+## back to previous frames
+            
+    def back_to(self):
+        self.titleScreen.place(x=200, y=10)
+        
+        self.var=StringVar(self)
+        self.var.set("Choose a topic")
+        
+        self.menu= OptionMenu(self, self.var, *AvailableTopics, command = self.TopicChoosen)
+        self.menu.config(width=15, height=1)
+        self.menu.place(x=222.5, y=60)
+        self.menu.after(1500, self.updateDropdown)
+        
+        self.add_topic.place(x=240, y=100)
+        self.quit = Button(self)
+        self.quit["text"] = "Quit"
+        self.quit["command"] =  self.controller.quitgame
+        self.quit.place(x=535, y=430)
+
+        self.mainmenu.grid_forget()
+        self.quit.place_forget()
+        for item in self.buttonList:
+            item.grid_forget()
+        for item in self.categoryList:
+            item.grid_forget()
+
+        try:
+            self.selectedquestion.place_forget()
+            self.answerSlotLabel.place_forget()
+            self.answerSlot.place_forget()
+            self.answerSlotButton.place_forget()
+            self.mainmenu.place_forget()
+        except AttributeError:
+            pass
 
 ## dropdown menu updated just in case a topic is changed
 
@@ -104,10 +149,176 @@ class MainMenu(Frame):
         self.menu= OptionMenu(self, self.var, *AvailableTopics, command = self.TopicChoosen)
         self.menu.config(width=15, height=1)
         self.menu.place(x=222.5, y=60)
-        self.menu.after(2000, self.updateDropdown)
+##        self.menu.after(2000, self.updateDropdown)
+
+    def PlayGame(self):
+        categories=[]
+        for item in self.questionanswer:
+            if item[1] in categories:
+                pass
+            else:
+                categories.append(item[1])
+                
+        
+        self.titleScreen.place_forget()
+        self.menu.destroy()
+        self.add_topic.place_forget()
+        self.quit.place_forget()
+
+        self.mainmenu=Button(self, width=10, font=("Helvetica", 8))
+        self.mainmenu['text']= "Main Menu"
+        self.mainmenu["command"] = lambda: self.back_to()
+        self.mainmenu.grid(row=0, column=5)
+
+        self.quit = Button(self)
+        self.quit["text"] = "Quit"
+        self.quit["command"] =  self.controller.quitgame
+        self.quit.place(x=535, y=430)
+
+        self.scoreboardDICT={'Team 1':'0','Team 2':'0', 'Team 3':'0', 'Team 4':'0'}
+
+        self.scoreboard=Label(self, width=10,  text= 'Score', font=("Helvetica", 14))
+        self.scoreboard.place(x=505, y=100)
+
+        self.scoreteam1=Label(self, width=10,  text= 'Team 1: {Team 1}'.format(**self.scoreboardDICT), font=("Helvetica", 14))
+        self.scoreteam1.place(x=503, y=120)
+        
+        self.scoreteam2=Label(self, width=10,  text= 'Team 2: {Team 2}'.format(**self.scoreboardDICT), font=("Helvetica", 14))
+        self.scoreteam2.place(x=503, y=140)
+        
+        self.scoreteam3=Label(self, width=10,  text= 'Team 3: {Team 3}'.format(**self.scoreboardDICT), font=("Helvetica", 14))
+        self.scoreteam3.place(x=503, y=160)
+        
+        self.scoreteam4=Label(self, width=10,  text= 'Team 4: {Team 4}'.format(**self.scoreboardDICT), font=("Helvetica", 14))
+        self.scoreteam4.place(x=503, y=180)
+
+
+        self.buttonList= []
+        for col in range(0,5):
+            photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
+            photo1 = photo1.subsample(3,3)
+            self.button=Button(self, image=photo1, command= lambda: self.ButtonClickedinGame('EASY'))
+            self.button.image=photo1
+            self.button.grid(row=1, column=col)
+            self.buttonList.append(self.button)
+
+            photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
+            photo2 = photo2.subsample(3,3)
+            self.button=Button(self, image=photo2, command= lambda:self.ButtonClickedinGame('EASY'))
+            self.button.image=photo2
+            self.button.grid(row=2, column=col)
+            self.buttonList.append(self.button)
+
+            photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
+            photo3 = photo3.subsample(3,3)
+            self.button=Button(self, image=photo3, command= lambda:self.ButtonClickedinGame('MEDIUM'))
+            self.button.image=photo3
+            self.button.grid(row=3, column=col)
+            self.buttonList.append(self.button)
+
+            photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
+            photo4 = photo4.subsample(3,3)
+            self.button=Button(self, image=photo4, command= lambda:self.ButtonClickedinGame('HARD'))
+            self.button.image=photo4
+            self.button.grid(row=4, column=col)
+            self.buttonList.append(self.button)
+
+            photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
+            photo5 = photo5.subsample(3,3)
+            self.button=Button(self, image=photo5, command= lambda:self.ButtonClickedinGame('HARD'))
+            self.button.image=photo5
+            self.button.grid(row=5, column=col)
+            self.buttonList.append(self.button)
+
+        self.categoryList=[]
+        col=0
+        for item in categories:
+            self.category_label=Label(self, bg="#000383",relief=RAISED,borderwidth=3, text=item,fg="white", font=("Baskerville Old Face", 18),height=3, width=10, wraplength=90, justify=CENTER)
+            self.category_label.grid(row=0, column=col)
+            self.categoryList.append(self.category_label)
+            col += 1
+
+        self.ALLquestionanswers={}
+        self.EASYquestionanswers = {}
+        self.MEDIUMquestionanswers= {}
+        self.HARDquestionanswers={}
+
+        for item in self.questionanswer:
+            question = item[2]
+            answer = item[3]
+            difficulty = item[4]
             
+            if difficulty == 'EASY':
+                if question not in self.EASYquestionanswers:
+                    self.EASYquestionanswers[question]= answer
+                    self.ALLquestionanswers[question]=answer
+                    
+            if difficulty == 'MEDIUM':
+                if question not in self.MEDIUMquestionanswers:
+                    self.MEDIUMquestionanswers[question]= answer
+                    self.ALLquestionanswers[question]=answer
+                    
+            if difficulty == 'HARD':
+                if question not in self.HARDquestionanswers:
+                    self.HARDquestionanswers[question]= answer
+                    self.ALLquestionanswers[question]=answer
+                    
+        
+    def ButtonClickedinGame(self, difficulty):
+        for item in self.buttonList:
+            item.grid_forget()
+        for item in self.categoryList:
+            item.grid_forget()
+        self.mainmenu.grid_forget()
+
+        self.scoreboard.place_forget()
+        self.scoreteam1.place_forget()
+        self.scoreteam2.place_forget()
+        self.scoreteam3.place_forget()
+        self.scoreteam4.place_forget()
+
+        question_asked=''
+        if difficulty == 'EASY':
+            question_asked= random.choice(self.EASYquestionanswers.keys())
+        if difficulty == 'MEDIUM':
+            question_asked= random.choice(self.MEDIUMquestionanswers.keys())
+        if difficulty == 'HARD':
+            question_asked= random.choice(self.HARDquestionanswers.keys())
+        
+        self.selectedquestion=Label(self, text= question_asked, font=("Baskerville Old Face", 24, "bold"), fg="white", bg="#000383", width= 45, height=11, wraplength=500, justify=CENTER, relief=GROOVE, bd=5)
+        self.selectedquestion.place(x=20, y=25)
+
+##        self.answerSlotLabel=Label(self, text="Answer:")
+##        self.answerSlotLabel.place(x=50, y=350)
+##
+##        self.answerSlot=Entry(self)
+##        self.answerSlot.place(x=110, y=349)
+##        self.answerSlot.bind('<Return>', self.checkAnswer)
+##
+##        self.answerSlotButton = Button(self, text="Enter")
+##        self.answerSlotButton.place(x=302, y=349)
+##        self.answerSlotButton.bind('<Button>', self.checkAnswer)
+
+        self.showAnswer= Button(self, text='Show Answer', font=('Ariel', 18), width=12, command= lambda: self.checkAnswer(question_asked))
+        self.showAnswer.place(x=220, y=360)
+
+        self.mainmenu=Button(self)
+        self.mainmenu['text']= "Back to Main Menu"
+        self.mainmenu["command"] = lambda:self.back_to()
+        self.mainmenu.place(x=390, y=430)
+
+
+    def checkAnswer(self, questionans):
+        self.selectedquestion.config(text="{questionans}".format(questionans=self.ALLquestionanswers[questionans]))
+        self.showAnswer.place_forget()
+
+        self.winningTeam=Label(self, text= "Which team got the answer right?")
+        self.winningTeam.place(x=200, y=350)
+
+        
+
 ################################################################################
-class TopicsPage(Frame):
+class TopicsPage(BaseFrame):
     def __init__(self, master, controller):
         Frame.__init__(self, master, width="590", height="460")
         self.controller=controller
@@ -331,7 +542,6 @@ class TopicsPage(Frame):
         self.deletetopic.place_forget()
         self.mainmenu.pack_forget()
         
-        
         try:
             self.inputItemLabel.place_forget()
             self.inputItemEntry.place_forget()
@@ -415,6 +625,7 @@ class TopicsPage(Frame):
         current = self.tree.focus()
         item = self.tree.item(current)
         print item['values']
+        
 
 ################################################################################
 ##
@@ -436,98 +647,98 @@ class TopicsPage(Frame):
 ##        self.hardbutton.grid(row=3, column=0)
 ##
 ################################################################################
-class PlayGame(Frame):
-    def __init__(self, master, controller):
-        Frame.__init__(self, master, width="590", height="460")
-        self.controller=controller
-        self.create_widgets()
-        
-    def create_widgets(self):
-        self.mainmenu=Button(self, width=10, font=("Helvetica", 8))
-        self.mainmenu['text']= "Main Menu"
-        self.mainmenu["command"] = lambda: self.controller.show_frame(MainMenu)
-        self.mainmenu.grid(row=0, column=5)
-
-        self.quit = Button(self)
-        self.quit["text"] = "Quit"
-        self.quit["command"] =  self.controller.quitgame
-        self.quit.place(x=535, y=430)
-
-        for col in range(0,5):
-            photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
-            photo1 = photo1.subsample(3,3)
-            self.button=Button(self, image=photo1, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-            self.button.image=photo1
-            self.button.grid(row=1, column=col)
-
-            photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
-            photo2 = photo2.subsample(3,3)
-            self.button=Button(self, image=photo2, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-            self.button.image=photo2
-            self.button.grid(row=2, column=col)
-
-            photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
-            photo3 = photo3.subsample(3,3)
-            self.button=Button(self, image=photo3, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-            self.button.image=photo3
-            self.button.grid(row=3, column=col)
-
-            photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
-            photo4 = photo4.subsample(3,3)
-            self.button=Button(self, image=photo4, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-            self.button.image=photo4
-            self.button.grid(row=4, column=col)
-
-            photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
-            photo5 = photo5.subsample(3,3)
-            self.button=Button(self, image=photo5, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-            self.button.image=photo5
-            self.button.grid(row=5, column=col)
-
-        for col in range(0,5):
-            self.category_label=Label(self, bg="#000383",relief=RAISED,borderwidth=3, text="CATEGORY",fg="white", font=("Baskerville Old Face", 12),height=5, width=15, wraplength=90, justify=CENTER)
-            self.category_label.grid(row=0, column=col)
-
+##class PlayGame(BaseFrame):
+##    def __init__(self, master, controller):
+##        Frame.__init__(self, master, width="590", height="460")
+##        self.controller=controller
+##        self.create_widgets()
+##        
+##    def create_widgets(self):
+##        self.mainmenu=Button(self, width=10, font=("Helvetica", 8))
+##        self.mainmenu['text']= "Main Menu"
+##        self.mainmenu["command"] = lambda: self.controller.show_frame(MainMenu)
+##        self.mainmenu.grid(row=0, column=5)
+##
+##        self.quit = Button(self)
+##        self.quit["text"] = "Quit"
+##        self.quit["command"] =  self.controller.quitgame
+##        self.quit.place(x=535, y=430)
+##
+##        for col in range(0,5):
+##            photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
+##            photo1 = photo1.subsample(3,3)
+##            self.button=Button(self, image=photo1, command= lambda:self.controller.show_frame(ButtonClickedinGame))
+##            self.button.image=photo1
+##            self.button.grid(row=1, column=col)
+##
+##            photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
+##            photo2 = photo2.subsample(3,3)
+##            self.button=Button(self, image=photo2, command= lambda:self.controller.show_frame(ButtonClickedinGame))
+##            self.button.image=photo2
+##            self.button.grid(row=2, column=col)
+##
+##            photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
+##            photo3 = photo3.subsample(3,3)
+##            self.button=Button(self, image=photo3, command= lambda:self.controller.show_frame(ButtonClickedinGame))
+##            self.button.image=photo3
+##            self.button.grid(row=3, column=col)
+##
+##            photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
+##            photo4 = photo4.subsample(3,3)
+##            self.button=Button(self, image=photo4, command= lambda:self.controller.show_frame(ButtonClickedinGame))
+##            self.button.image=photo4
+##            self.button.grid(row=4, column=col)
+##
+##            photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
+##            photo5 = photo5.subsample(3,3)
+##            self.button=Button(self, image=photo5, command= lambda:self.controller.show_frame(ButtonClickedinGame))
+##            self.button.image=photo5
+##            self.button.grid(row=5, column=col)
+##
+##        for col in range(0,5):
+##            self.category_label=Label(self, bg="#000383",relief=RAISED,borderwidth=3, text="CATEGORY",fg="white", font=("Baskerville Old Face", 12),height=5, width=15, wraplength=90, justify=CENTER)
+##            self.category_label.grid(row=0, column=col)
+##
 ################################################################################
-
-class ButtonClickedinGame(Frame):
-    def __init__(self, master, controller):
-        Frame.__init__(self, master, width="590", height="460")
-        self.controller=controller
-        self.create_widgets()
-
-    def create_widgets(self):
-        self.selectedquestion=Label(self, text= "testing a question question", font=("Baskerville Old Face", 24, "bold"), fg="white", bg="#000383", width= 45, height=11, wraplength=500, justify=CENTER, relief=GROOVE, bd=5)
-##        self.selectedquestion.config(highlightcolor="white", highlightthickness=3)
-        self.selectedquestion.place(x=20, y=25)
-
-        self.answerSlotLabel=Label(self, text="Answer:")
-        self.answerSlotLabel.place(x=50, y=350)
-
-        self.answerSlot=Entry(self)
-        self.answerSlot.place(x=110, y=349)
-        self.answerSlot.bind('<Return>', self.checkAnswer)
-
-        self.answerSlotButton = Button(self, text="Enter")
-        self.answerSlotButton.place(x=302, y=349)
-        self.answerSlotButton.bind('<Button>', self.checkAnswer)
-
-        self.mainmenu=Button(self)
-        self.mainmenu['text']= "Back to Main Menu"
-        self.mainmenu["command"] = lambda:self.controller.show_frame(MainMenu)
-        self.mainmenu.place(x=400, y=425)
-
-
-    def checkAnswer(self, event):
-
-        userInput=self.answerSlot.get()
-        
-        if userInput == "Yes":
-            print 'yes'
-
-        else:
-            print 'no'
-        
+##
+##class ButtonClickedinGame(BaseFrame):
+##    def __init__(self, master, controller):
+##        Frame.__init__(self, master, width="590", height="460")
+##        self.controller=controller
+##        self.create_widgets()
+##
+##    def create_widgets(self):
+##        self.selectedquestion=Label(self, text= "testing a question question", font=("Baskerville Old Face", 24, "bold"), fg="white", bg="#000383", width= 45, height=11, wraplength=500, justify=CENTER, relief=GROOVE, bd=5)
+####        self.selectedquestion.config(highlightcolor="white", highlightthickness=3)
+##        self.selectedquestion.place(x=20, y=25)
+##
+##        self.answerSlotLabel=Label(self, text="Answer:")
+##        self.answerSlotLabel.place(x=50, y=350)
+##
+##        self.answerSlot=Entry(self)
+##        self.answerSlot.place(x=110, y=349)
+##        self.answerSlot.bind('<Return>', self.checkAnswer)
+##
+##        self.answerSlotButton = Button(self, text="Enter")
+##        self.answerSlotButton.place(x=302, y=349)
+##        self.answerSlotButton.bind('<Button>', self.checkAnswer)
+##
+##        self.mainmenu=Button(self)
+##        self.mainmenu['text']= "Back to Main Menu"
+##        self.mainmenu["command"] = lambda:self.controller.show_frame(MainMenu)
+##        self.mainmenu.place(x=400, y=425)
+##
+##
+##    def checkAnswer(self, event):
+##
+##        userInput=self.answerSlot.get()
+##        
+##        if userInput == "Yes":
+##            print 'yes'
+##
+##        else:
+##            print 'no'
+##        
 
     
 ################################################################################
