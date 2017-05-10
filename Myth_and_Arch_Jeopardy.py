@@ -58,6 +58,8 @@ class MainMenu(BaseFrame):
         Frame.__init__(self, master, width="590", height="460")
         self.controller=controller
         self.create_widgets()
+        self.scoreboardDICT={'Team 1':'0','Team 2':'0', 'Team 3':'0', 'Team 4':'0'}
+
         
     def create_widgets(self):
 
@@ -79,7 +81,7 @@ class MainMenu(BaseFrame):
         self.quit = Button(self)
         self.quit["text"] = "Quit"
         self.quit["command"] =  self.controller.quitgame
-        self.quit.place(x=535, y=430)
+        self.quit.place(x=525, y=430)
 
 ## topic chosen to start the game and go to game frame
 
@@ -118,7 +120,7 @@ class MainMenu(BaseFrame):
         self.quit = Button(self)
         self.quit["text"] = "Quit"
         self.quit["command"] =  self.controller.quitgame
-        self.quit.place(x=535, y=430)
+        self.quit.place(x=525, y=430)
 
         self.mainmenu.grid_forget()
         self.quit.place_forget()
@@ -133,8 +135,15 @@ class MainMenu(BaseFrame):
             self.answerSlot.place_forget()
             self.answerSlotButton.place_forget()
             self.mainmenu.place_forget()
+
         except AttributeError:
             pass
+        self.scoreboard.place_forget()
+        self.scoreteam1.place_forget()
+        self.scoreteam2.place_forget()
+        self.scoreteam3.place_forget()
+        self.scoreteam4.place_forget()
+        self.showAnswer.place_forget()
 
 ## dropdown menu updated just in case a topic is changed
 
@@ -149,9 +158,25 @@ class MainMenu(BaseFrame):
         self.menu= OptionMenu(self, self.var, *AvailableTopics, command = self.TopicChoosen)
         self.menu.config(width=15, height=1)
         self.menu.place(x=222.5, y=60)
-##        self.menu.after(2000, self.updateDropdown)
+        self.menu.after(2000, self.updateDropdown)
+
+
 
     def PlayGame(self):
+        try:
+            self.selectedquestion.place_forget()
+            self.showAnswer.place_forget()
+            self.mainmenu.place_forget()
+            self.showAnswer.place_forget()
+            self.winningTeam.place_forget()
+            self.team1.place_forget()
+            self.team2.place_forget()
+            self.team3.place_forget()
+            self.team4.place_forget()
+        except AttributeError:
+            pass
+
+        
         categories=[]
         for item in self.questionanswer:
             if item[1] in categories:
@@ -173,16 +198,15 @@ class MainMenu(BaseFrame):
         self.quit = Button(self)
         self.quit["text"] = "Quit"
         self.quit["command"] =  self.controller.quitgame
-        self.quit.place(x=535, y=430)
+        self.quit.place(x=525, y=430)
 
-        self.scoreboardDICT={'Team 1':'0','Team 2':'0', 'Team 3':'0', 'Team 4':'0'}
-
+        
         self.scoreboard=Label(self, width=10,  text= 'Score', font=("Helvetica", 14))
         self.scoreboard.place(x=505, y=100)
 
         self.scoreteam1=Label(self, width=10,  text= 'Team 1: {Team 1}'.format(**self.scoreboardDICT), font=("Helvetica", 14))
         self.scoreteam1.place(x=503, y=120)
-        
+
         self.scoreteam2=Label(self, width=10,  text= 'Team 2: {Team 2}'.format(**self.scoreboardDICT), font=("Helvetica", 14))
         self.scoreteam2.place(x=503, y=140)
         
@@ -305,7 +329,7 @@ class MainMenu(BaseFrame):
         self.mainmenu=Button(self)
         self.mainmenu['text']= "Back to Main Menu"
         self.mainmenu["command"] = lambda:self.back_to()
-        self.mainmenu.place(x=390, y=430)
+        self.mainmenu.place(x=375, y=430)
 
 
     def checkAnswer(self, questionans):
@@ -313,10 +337,44 @@ class MainMenu(BaseFrame):
         self.showAnswer.place_forget()
 
         self.winningTeam=Label(self, text= "Which team got the answer right?")
-        self.winningTeam.place(x=200, y=350)
+        self.winningTeam.place(x=195, y=340)
 
+        self.team1=Button(self, text="Team 1", command= lambda: self.correctanswer('1'))
+        self.team1.place(x=220, y=360)
+
+        self.team2=Button(self, text="Team 2", command= lambda: self.correctanswer('2'))
+        self.team2.place(x=220, y=390)
+
+        self.team3=Button(self, text="Team 3", command= lambda: self.correctanswer('3'))
+        self.team3.place(x=320, y=360)
+
+        self.team4=Button(self, text="Team 4", command= lambda: self.correctanswer('4'))
+        self.team4.place(x=320, y=390)
+
+    def correctanswer(self, team):
+        if team == '1':
+            curscore = self.scoreboardDICT['Team 1']
+            newscore = int(curscore) +1
+            self.scoreboardDICT['Team 1'] = newscore
+
+        if team == '2':
+            curscore = self.scoreboardDICT['Team 2']
+            newscore = int(curscore) +1
+            self.scoreboardDICT['Team 2'] = newscore
+
+        if team == '3':
+            curscore = self.scoreboardDICT['Team 3']
+            newscore = int(curscore) +1
+            self.scoreboardDICT['Team 3'] = newscore
+
+        if team == '4':
+            curscore = self.scoreboardDICT['Team 4']
+            newscore = int(curscore) +1
+            self.scoreboardDICT['Team 4'] = newscore
+
+        self.PlayGame()
         
-
+    
 ################################################################################
 class TopicsPage(BaseFrame):
     def __init__(self, master, controller):
@@ -364,6 +422,34 @@ class TopicsPage(BaseFrame):
 ##        label=self.labels[0]
 ##        label["text"]=newtopicinput
 ##        label.config(font=("Helvetica", 18, "bold"), fg="black")
+
+
+    def editTOPICinDatabase(self):
+        oldCategory = self.item['values'][0]
+        oldQuestion= self.item['values'][1]
+        oldAnswer=self.item['values'][2]
+        oldDifficulty=self.item['values'][3]
+
+        
+        userInput=self.categoryEdit.get()
+        newCategory= userInput.upper()
+
+        newQuestion=self.questionEdit.get()
+
+        newAnswer=self.answerEdit.get()
+
+        userInput=self.difficultyEdit.get()
+        newDifficulty=userInput.upper()
+
+        Updating_SQL= """UPDATE {TableName}
+                    SET Category = "{NEWCategory}", Question="{NEWQuestion}", Answer="{NEWAnswer}", Difficulty="{NEWDifficulty}"
+                    WHERE Category ="{OLDCategory}" AND Question="{OLDQuestion}" AND Answer="{OLDAnswer}" AND Difficulty="{OLDDifficulty}";"""
+
+        Curtopic = self.CurTopic.replace(" ","_")
+
+        sql_command=Updating_SQL.format(TableName=Curtopic, NEWCategory=newCategory, NEWQuestion=newQuestion, NEWAnswer=newAnswer, NEWDifficulty=newDifficulty,
+                                        OLDCategory=oldCategory, OLDQuestion=oldQuestion, OLDAnswer=oldAnswer, OLDDifficulty=oldDifficulty)
+        print sql_command
         
     def clear_label(self):
         self.label.place_forget()
@@ -402,7 +488,7 @@ class TopicsPage(BaseFrame):
         popupframe.title(title)
         screenX= popupframe.winfo_screenwidth()
         screenY= popupframe.winfo_screenheight()
-        TKwidth=600
+        TKwidth=400
         TKheight = 250
         TkPosX=(screenX - TKwidth)/2
         TkPosY=(screenY - TKheight)/2
@@ -433,7 +519,42 @@ class TopicsPage(BaseFrame):
 
         if action == 'Error':
             pass
-  
+
+        if action == 'Edit':
+            self.edittopicpage=Frame(popupframe)
+            self.edittopicpage.pack()
+            
+            self.categoryLabel=Label(self.edittopicpage, text= "Category:")
+            self.categoryLabel.pack(side="top")
+
+            self.categoryEdit=Entry(self.edittopicpage)
+            self.categoryEdit.pack(side="top")
+            self.categoryEdit.insert(0, self.item['values'][0])
+            
+            self.questionLabel=Label(self.edittopicpage, text="Question:")
+            self.questionLabel.pack(side="top")
+
+            self.questionEdit=Entry(self.edittopicpage)
+            self.questionEdit.pack(side="top")
+            self.questionEdit.insert(0, self.item['values'][1])
+            
+            self.answerLabel= Label(self.edittopicpage, text="Answer:")
+            self.answerLabel.pack(side="top")
+
+            self.answerEdit=Entry(self.edittopicpage)
+            self.answerEdit.pack(side="top")
+            self.answerEdit.insert(0, self.item['values'][2])
+            
+            self.difficultyLabel=Label(self.edittopicpage, text="Difficulty:")
+            self.difficultyLabel.pack(side="top")
+
+            self.difficultyEdit=Entry(self.edittopicpage)
+            self.difficultyEdit.pack(side="top")
+            self.difficultyEdit.insert(0, self.item['values'][3])
+
+            self.edittopicbutton= Button(self.edittopicpage, text= "Done Editing", command= lambda: self.editTOPICinDatabase())
+            self.edittopicbutton.pack(side='top')
+
         popupframe.mainloop()
 
     def create_widgets(self):
@@ -456,12 +577,13 @@ class TopicsPage(BaseFrame):
         
         self.mainmenu=Button(self)
         self.mainmenu['text']= "Back to Main Menu"
-        self.mainmenu["command"] = self.back_to(MainMenu)
+        self.mainmenu["command"] = lambda: self.back_to(MainMenu)
         self.mainmenu.pack(side="bottom", anchor=SE)
 
 ## going back to previous frames with their widgets
 
     def back_to(self, frame):
+
         try:
             self.scrollbar.pack_forget()
             self.tree.pack_forget()
@@ -501,6 +623,9 @@ class TopicsPage(BaseFrame):
                 
         if action =='Edit':
             try:
+                index=self.listboxmain.curselection()
+                value=self.listboxmain.get(index[0])
+
                 self.Edit_Topic()
 
             except IndexError:
@@ -536,6 +661,9 @@ class TopicsPage(BaseFrame):
 ## edit frame shows with detailed information of what the topic has stored
 
     def Edit_Topic(self):
+        index=self.listboxmain.curselection()
+        self.CurTopic=self.listboxmain.get(index[0])
+        
         self.listboxmain.place_forget()
         self.edittopic.place_forget()
         self.addtopic.place_forget()
@@ -549,8 +677,11 @@ class TopicsPage(BaseFrame):
         except AttributeError:
             pass
 
+        self.title=Label(self, text=self.CurTopic, font=('Ariel', 18, "bold"))
+        self.title.pack(side=TOP)
+
         self.scrollbar= Scrollbar(self)
-        self.scrollbar.pack(side=RIGHT, fill=Y, anchor=N)
+        self.scrollbar.place(x=564,y=35, height=350)
         
         self.tree= Treeview(self, columns=('Category', 'Question', 'Answer', 'Difficulty'), show='headings', selectmode="browse", yscrollcommand=self.scrollbar.set)
 
@@ -573,18 +704,18 @@ class TopicsPage(BaseFrame):
             value1=self.listboxmain.get(index[0])
             value=value1.replace(" ", "_")
 
-            RowsInTable=[]
+            self.RowsInTable=[]
             EditTopicTable_SQL="""SELECT * FROM {TableName};"""
             sql_command=EditTopicTable_SQL.format(TableName=value)
             results = cursor.execute(sql_command)
             
             for row in results:
-                RowsInTable.append(row)
+                self.RowsInTable.append(row)
                     
         except IndexError:
             pass
 
-        for item in RowsInTable:
+        for item in self.RowsInTable:
             category=item[1]
             question=item[2]
             answer=item[3]
@@ -594,7 +725,7 @@ class TopicsPage(BaseFrame):
 
         self.tree.bind("<Double-1>", self.DoubleClick)
         
-        self.tree.pack(side=LEFT, anchor=N)
+        self.tree.place(x=10,y=35, height=350)
 
         self.mainmenu=Button(self)
         self.mainmenu['text']= "Back to Main Menu"
@@ -623,8 +754,9 @@ class TopicsPage(BaseFrame):
 
     def DoubleClick(self,event):
         current = self.tree.focus()
-        item = self.tree.item(current)
-        print item['values']
+        self.item = self.tree.item(current)
+
+        self.popup("Edit")
         
 
 ################################################################################
@@ -646,101 +778,6 @@ class TopicsPage(BaseFrame):
 ##        self.hardbutton["command"]= lambda: self.controller.show_frame(PlayGame)
 ##        self.hardbutton.grid(row=3, column=0)
 ##
-################################################################################
-##class PlayGame(BaseFrame):
-##    def __init__(self, master, controller):
-##        Frame.__init__(self, master, width="590", height="460")
-##        self.controller=controller
-##        self.create_widgets()
-##        
-##    def create_widgets(self):
-##        self.mainmenu=Button(self, width=10, font=("Helvetica", 8))
-##        self.mainmenu['text']= "Main Menu"
-##        self.mainmenu["command"] = lambda: self.controller.show_frame(MainMenu)
-##        self.mainmenu.grid(row=0, column=5)
-##
-##        self.quit = Button(self)
-##        self.quit["text"] = "Quit"
-##        self.quit["command"] =  self.controller.quitgame
-##        self.quit.place(x=535, y=430)
-##
-##        for col in range(0,5):
-##            photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
-##            photo1 = photo1.subsample(3,3)
-##            self.button=Button(self, image=photo1, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-##            self.button.image=photo1
-##            self.button.grid(row=1, column=col)
-##
-##            photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
-##            photo2 = photo2.subsample(3,3)
-##            self.button=Button(self, image=photo2, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-##            self.button.image=photo2
-##            self.button.grid(row=2, column=col)
-##
-##            photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
-##            photo3 = photo3.subsample(3,3)
-##            self.button=Button(self, image=photo3, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-##            self.button.image=photo3
-##            self.button.grid(row=3, column=col)
-##
-##            photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
-##            photo4 = photo4.subsample(3,3)
-##            self.button=Button(self, image=photo4, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-##            self.button.image=photo4
-##            self.button.grid(row=4, column=col)
-##
-##            photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
-##            photo5 = photo5.subsample(3,3)
-##            self.button=Button(self, image=photo5, command= lambda:self.controller.show_frame(ButtonClickedinGame))
-##            self.button.image=photo5
-##            self.button.grid(row=5, column=col)
-##
-##        for col in range(0,5):
-##            self.category_label=Label(self, bg="#000383",relief=RAISED,borderwidth=3, text="CATEGORY",fg="white", font=("Baskerville Old Face", 12),height=5, width=15, wraplength=90, justify=CENTER)
-##            self.category_label.grid(row=0, column=col)
-##
-################################################################################
-##
-##class ButtonClickedinGame(BaseFrame):
-##    def __init__(self, master, controller):
-##        Frame.__init__(self, master, width="590", height="460")
-##        self.controller=controller
-##        self.create_widgets()
-##
-##    def create_widgets(self):
-##        self.selectedquestion=Label(self, text= "testing a question question", font=("Baskerville Old Face", 24, "bold"), fg="white", bg="#000383", width= 45, height=11, wraplength=500, justify=CENTER, relief=GROOVE, bd=5)
-####        self.selectedquestion.config(highlightcolor="white", highlightthickness=3)
-##        self.selectedquestion.place(x=20, y=25)
-##
-##        self.answerSlotLabel=Label(self, text="Answer:")
-##        self.answerSlotLabel.place(x=50, y=350)
-##
-##        self.answerSlot=Entry(self)
-##        self.answerSlot.place(x=110, y=349)
-##        self.answerSlot.bind('<Return>', self.checkAnswer)
-##
-##        self.answerSlotButton = Button(self, text="Enter")
-##        self.answerSlotButton.place(x=302, y=349)
-##        self.answerSlotButton.bind('<Button>', self.checkAnswer)
-##
-##        self.mainmenu=Button(self)
-##        self.mainmenu['text']= "Back to Main Menu"
-##        self.mainmenu["command"] = lambda:self.controller.show_frame(MainMenu)
-##        self.mainmenu.place(x=400, y=425)
-##
-##
-##    def checkAnswer(self, event):
-##
-##        userInput=self.answerSlot.get()
-##        
-##        if userInput == "Yes":
-##            print 'yes'
-##
-##        else:
-##            print 'no'
-##        
-
-    
 ################################################################################
         
 conn=sqlite3.connect("/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Myth_and_Arch_Jeopardy_Database.db")
