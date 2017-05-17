@@ -106,44 +106,41 @@ class MainMenu(BaseFrame):
 ## back to previous frames
             
     def back_to(self):
-        self.titleScreen.place(x=200, y=10)
-        
-        self.var=StringVar(self)
-        self.var.set("Choose a topic")
-        
-        self.menu= OptionMenu(self, self.var, *AvailableTopics, command = self.TopicChoosen)
-        self.menu.config(width=15, height=1)
-        self.menu.place(x=222.5, y=60)
-        self.menu.after(1500, self.updateDropdown)
-        
-        self.add_topic.place(x=240, y=100)
-        self.quit = Button(self)
-        self.quit["text"] = "Quit"
-        self.quit["command"] =  self.controller.quitgame
-        self.quit.place(x=525, y=430)
-
-        self.mainmenu.grid_forget()
-        self.quit.place_forget()
-        for item in self.buttonList:
-            item.grid_forget()
-        for item in self.categoryList:
-            item.grid_forget()
-
         try:
+            self.titleScreen.place(x=200, y=10)
+            self.var=StringVar(self)
+            self.var.set("Choose a topic")
+            self.menu= OptionMenu(self, self.var, *AvailableTopics, command = self.TopicChoosen)
+            self.menu.config(width=15, height=1)
+            self.menu.place(x=222.5, y=60)
+            self.menu.after(1500, self.updateDropdown)
+            self.add_topic.place(x=240, y=100)
+            self.quit = Button(self)
+            self.quit["text"] = "Quit"
+            self.quit["command"] =  self.controller.quitgame
+            self.quit.place(x=525, y=430)
+            self.mainmenu.grid_forget()
+            self.quit.place_forget()
+            for item in self.buttonList:
+                item.grid_forget()
+            for item in self.categoryList:
+                item.grid_forget()
+            self.scoreboard.place_forget()
+            self.scoreteam1.place_forget()
+            self.scoreteam2.place_forget()
+            self.scoreteam3.place_forget()
+            self.scoreteam4.place_forget()
+            self.showAnswer.place_forget()
+            self.mainmenu.place_forget()
             self.selectedquestion.place_forget()
             self.answerSlotLabel.place_forget()
             self.answerSlot.place_forget()
             self.answerSlotButton.place_forget()
-            self.mainmenu.place_forget()
+
 
         except AttributeError:
             pass
-        self.scoreboard.place_forget()
-        self.scoreteam1.place_forget()
-        self.scoreteam2.place_forget()
-        self.scoreteam3.place_forget()
-        self.scoreteam4.place_forget()
-        self.showAnswer.place_forget()
+
 
 ## dropdown menu updated just in case a topic is changed
 
@@ -441,7 +438,7 @@ class TopicsPage(BaseFrame):
         userInput=self.difficultyEdit.get()
         newDifficulty=userInput.upper()
 
-        Updating_SQL= """UPDATE {TableName}
+        Updating_SQL= """UPDATE "{TableName}"
                     SET Category = "{NEWCategory}", Question="{NEWQuestion}", Answer="{NEWAnswer}", Difficulty="{NEWDifficulty}"
                     WHERE Category ="{OLDCategory}" AND Question="{OLDQuestion}" AND Answer="{OLDAnswer}" AND Difficulty="{OLDDifficulty}";"""
 
@@ -449,7 +446,39 @@ class TopicsPage(BaseFrame):
 
         sql_command=Updating_SQL.format(TableName=Curtopic, NEWCategory=newCategory, NEWQuestion=newQuestion, NEWAnswer=newAnswer, NEWDifficulty=newDifficulty,
                                         OLDCategory=oldCategory, OLDQuestion=oldQuestion, OLDAnswer=oldAnswer, OLDDifficulty=oldDifficulty)
-        print sql_command
+        cursor.execute(sql_command)
+        conn.commit()
+
+        selected_item = self.tree.selection()[0]
+        self.tree.delete(selected_item)
+        self.tree.insert('', 'end', values=(newCategory, newQuestion, newAnswer, newDifficulty))
+
+        popupframe.destroy()
+
+    def addTOPICinDatabase(self):
+        userInput=self.categoryAdd.get()
+        newCategory= userInput.upper()
+
+        newQuestion=self.questionAdd.get()
+
+        newAnswer=self.answerAdd.get()
+
+        userInput=self.difficultyAdd.get()
+        newDifficulty=userInput.upper()
+
+        Updating_SQL= """INSERT INTO "{TableName}"
+                    VALUES (NULL, "{NEWCategory}", "{NEWQuestion}", "{NEWAnswer}", "{NEWDifficulty}");"""
+
+        Curtopic = self.CurTopic.replace(" ","_")
+
+        sql_command=Updating_SQL.format(TableName=Curtopic, NEWCategory=newCategory, NEWQuestion=newQuestion, NEWAnswer=newAnswer, NEWDifficulty=newDifficulty)
+        cursor.execute(sql_command)
+        conn.commit()
+
+        self.tree.insert('', 'end', values=(newCategory, newQuestion, newAnswer, newDifficulty))
+
+        popupframe.destroy()
+        
         
     def clear_label(self):
         self.label.place_forget()
@@ -476,6 +505,29 @@ class TopicsPage(BaseFrame):
             self.updateList(AvailableTopics, "Select a topic...")
 
             popupframe.destroy()
+            
+        except IndexError:
+            pass
+
+    def delete_question(self):
+        try:
+            oldCategory = self.item['values'][0]
+            oldQuestion= self.item['values'][1]
+            oldAnswer=self.item['values'][2]
+            oldDifficulty=self.item['values'][3]
+            Curtopic = self.CurTopic.replace(" ","_")
+
+            Delete_SQL= """DELETE FROM {TableName} WHERE Category ="{OLDCategory}" AND Question="{OLDQuestion}" AND Answer="{OLDAnswer}" AND Difficulty="{OLDDifficulty}";"""
+            sql_command=Delete_SQL.format(TableName=Curtopic, OLDCategory=oldCategory, OLDQuestion=oldQuestion, OLDAnswer=oldAnswer, OLDDifficulty=oldDifficulty)
+
+            cursor.execute(sql_command)
+            conn.commit()
+
+            selected_item = self.tree.selection()[0]
+            self.tree.delete(selected_item)
+
+            popupframe.destroy()
+
             
         except IndexError:
             pass
@@ -508,6 +560,30 @@ class TopicsPage(BaseFrame):
                 self.warningLabel.pack(side="top")
 
                 self.warningButtonYES=Button(self.deletetopicpage, text="YES", command= self.delete_topic)
+                self.warningButtonYES.pack(side="top")
+
+                self.warningButtonNO=Button(self.deletetopicpage, text="NO", command= popupframe.destroy)
+                self.warningButtonNO.pack(side="top")
+
+
+            except IndexError:
+                pass
+
+        if action == 'Delete Question':
+            self.deletetopicpage= Frame(popupframe)
+            self.deletetopicpage.pack()
+            try:
+                current = self.tree.focus()
+                self.item = self.tree.item(current)
+                value= self.item['values'][1]
+
+                warningmessage = "Are you sure you want to delete '{TOPIC}'?"
+                warningmessage= warningmessage.format(TOPIC=value)
+
+                self.warningLabel=Label(self.deletetopicpage, text = warningmessage, font=("Helvetica", 24, "bold"), fg="red", wraplength=350)
+                self.warningLabel.pack(side="top")
+
+                self.warningButtonYES=Button(self.deletetopicpage, text="YES", command= self.delete_question)
                 self.warningButtonYES.pack(side="top")
 
                 self.warningButtonNO=Button(self.deletetopicpage, text="NO", command= popupframe.destroy)
@@ -555,6 +631,37 @@ class TopicsPage(BaseFrame):
             self.edittopicbutton= Button(self.edittopicpage, text= "Done Editing", command= lambda: self.editTOPICinDatabase())
             self.edittopicbutton.pack(side='top')
 
+        if action == 'Add':
+            self.addtopicpage=Frame(popupframe)
+            self.addtopicpage.pack()
+            
+            self.categoryLabel=Label(self.addtopicpage, text= "Category:")
+            self.categoryLabel.pack(side="top")
+
+            self.categoryAdd=Entry(self.addtopicpage)
+            self.categoryAdd.pack(side="top")
+            
+            self.questionLabel=Label(self.addtopicpage, text="Question:")
+            self.questionLabel.pack(side="top")
+
+            self.questionAdd=Entry(self.addtopicpage)
+            self.questionAdd.pack(side="top")
+            
+            self.answerLabel= Label(self.addtopicpage, text="Answer:")
+            self.answerLabel.pack(side="top")
+
+            self.answerAdd=Entry(self.addtopicpage)
+            self.answerAdd.pack(side="top")
+            
+            self.difficultyLabel=Label(self.addtopicpage, text="Difficulty:")
+            self.difficultyLabel.pack(side="top")
+
+            self.difficultyAdd=Entry(self.addtopicpage)
+            self.difficultyAdd.pack(side="top")
+
+            self.addtopicbutton= Button(self.addtopicpage, text= "Done Editing", command= lambda: self.addTOPICinDatabase())
+            self.addtopicbutton.pack(side='top')
+
         popupframe.mainloop()
 
     def create_widgets(self):
@@ -577,32 +684,61 @@ class TopicsPage(BaseFrame):
         
         self.mainmenu=Button(self)
         self.mainmenu['text']= "Back to Main Menu"
-        self.mainmenu["command"] = lambda: self.back_to(MainMenu)
+        self.mainmenu["command"] = lambda: self.back_to_mainmenu(MainMenu)
         self.mainmenu.pack(side="bottom", anchor=SE)
 
 ## going back to previous frames with their widgets
-
-    def back_to(self, frame):
-
+    def back_to_topicpage(self, frame):
         try:
-            self.scrollbar.pack_forget()
-            self.tree.pack_forget()
+            self.scrollbar.place_forget()
+            self.tree.place_forget()
             self.mainmenu.place_forget()
             self.topicpage.place_forget()
-        except AttributeError:
-            pass
-        self.listboxmain.place(x=215, y=15)
-        self.edittopic.place(x=260, y=330)
-        self.addtopic.place(x=260, y=355)
-        self.deletetopic.place(x=254, y=380)
-        self.mainmenu.pack(side="bottom", anchor=SE)
-
-        try:
+            self.editpagetitle.pack_forget()
+            self.addnewquestion.place_forget()
+            self.deletequestion.place_forget()
+            self.listboxmain.place(x=215, y=15)
+            self.edittopic.place(x=260, y=330)
+            self.addtopic.place(x=260, y=355)
+            self.deletetopic.place(x=254, y=380)
+            self.mainmenu.pack(side="bottom", anchor=SE)
             self.inputItemLabel.place(x=100, y=298)
             self.inputItemEntry.place(x=220, y=297)
-            self.enterbutton.place(x=415, y=297)
+            self.enterbutton.unbind('<Button>')
+            self.enterbutton.place_forget()
+            self.inputItemLabel.place_forget()
+            self.inputItemEntry.place_forget()
+            self.enterbutton.place_forget()
+
         except AttributeError:
             pass
+        
+        self.controller.show_frame(frame)
+
+
+    def back_to_mainmenu(self, frame):
+        try:
+            self.inputItemLabel.place_forget()
+            self.inputItemEntry.place_forget()
+            self.scrollbar.place_forget()
+            self.tree.place_forget()
+            self.mainmenu.place_forget()
+            self.topicpage.place_forget()
+            self.enterbutton.unbind('<Button>')
+            self.enterbutton.place_forget()
+            self.editpagetitle.pack_forget()
+            self.addnewquestion.place_forget()
+            self.deletequestion.place_forget()
+            self.listboxmain.place_forget()
+            self.edittopic.place_forget()
+            self.addtopic.place_forget()
+            self.deletetopic.place_forget()
+            self.mainmenu.pack_forget()
+            
+        except AttributeError:
+            pass
+
+        self.back_to_topicpage(TopicsPage)
         
         self.controller.show_frame(frame)
 
@@ -677,8 +813,8 @@ class TopicsPage(BaseFrame):
         except AttributeError:
             pass
 
-        self.title=Label(self, text=self.CurTopic, font=('Ariel', 18, "bold"))
-        self.title.pack(side=TOP)
+        self.editpagetitle=Label(self, text=self.CurTopic, font=('Ariel', 18, "bold"))
+        self.editpagetitle.pack(side=TOP)
 
         self.scrollbar= Scrollbar(self)
         self.scrollbar.place(x=564,y=35, height=350)
@@ -696,6 +832,7 @@ class TopicsPage(BaseFrame):
         
         self.tree.heading("Difficulty", text= "Difficulty")
         self.tree.column('Difficulty', width =65, anchor="center")
+
 
         self.scrollbar.config(command=self.tree.yview)
         
@@ -729,13 +866,23 @@ class TopicsPage(BaseFrame):
 
         self.mainmenu=Button(self)
         self.mainmenu['text']= "Back to Main Menu"
-        self.mainmenu["command"] = lambda: self.back_to(MainMenu)
+        self.mainmenu["command"] = lambda: self.back_to_mainmenu(MainMenu)
         self.mainmenu.place(x=400, y=425)
 
         self.topicpage=Button(self)
         self.topicpage['text']= "Back to Topic Page"
-        self.topicpage["command"] = lambda: self.back_to(TopicsPage)
+        self.topicpage["command"] = lambda: self.back_to_topicpage(TopicsPage)
         self.topicpage.place(x=400, y=400)
+
+        self.addnewquestion=Button(self)
+        self.addnewquestion['text']= "Add New Question"
+        self.addnewquestion["command"] = lambda: self.popup("Add")
+        self.addnewquestion.place(x=220, y=390)
+
+        self.deletequestion=Button(self)
+        self.deletequestion['text']= "Delete Selected Question"
+        self.deletequestion["command"] = lambda: self.popup("Delete Question")
+        self.deletequestion.place(x=200, y=415)
 
 ##    def editExistingQuestions(self, topic):
 ##        index=self.listboxmain.curselection()
