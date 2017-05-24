@@ -121,22 +121,39 @@ class MainMenu(BaseFrame):
             self.quit.place(x=525, y=430)
             self.mainmenu.grid_forget()
             self.quit.place_forget()
+            self.scoreboardDICT["Team 1"] = 0
+            self.scoreboardDICT["Team 2"] = 0
+            self.scoreboardDICT["Team 3"] = 0
+            self.scoreboardDICT["Team 4"] = 0
+            self.team1=Button(self, text="Team 1", command= lambda: self.correctanswer('1'))
+            self.team2=Button(self, text="Team 2", command= lambda: self.correctanswer('2'))
+            self.team3=Button(self, text="Team 3", command= lambda: self.correctanswer('3'))
+            self.team4=Button(self, text="Team 4", command= lambda: self.correctanswer('4'))
             for item in self.buttonList:
-                item.grid_forget()
+                item[2].grid_remove()
             for item in self.categoryList:
-                item.grid_forget()
+                item[2].grid_remove()
+                
+        except AttributeError:
+            pass
+        
+        try:
             self.scoreboard.place_forget()
             self.scoreteam1.place_forget()
             self.scoreteam2.place_forget()
             self.scoreteam3.place_forget()
             self.scoreteam4.place_forget()
+            
+        except AttributeError:
+            pass
+            
+        try:
             self.showAnswer.place_forget()
             self.mainmenu.place_forget()
             self.selectedquestion.place_forget()
             self.answerSlotLabel.place_forget()
             self.answerSlot.place_forget()
             self.answerSlotButton.place_forget()
-
 
         except AttributeError:
             pass
@@ -213,125 +230,265 @@ class MainMenu(BaseFrame):
         self.scoreteam4=Label(self, width=10,  text= 'Team 4: {Team 4}'.format(**self.scoreboardDICT), font=("Helvetica", 14))
         self.scoreteam4.place(x=503, y=180)
 
-
-        self.buttonList= []
-        for col in range(0,5):
-            photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
-            photo1 = photo1.subsample(3,3)
-            self.button=Button(self, image=photo1, command= lambda: self.ButtonClickedinGame('EASY'))
-            self.button.image=photo1
-            self.button.grid(row=1, column=col)
-            self.buttonList.append(self.button)
-
-            photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
-            photo2 = photo2.subsample(3,3)
-            self.button=Button(self, image=photo2, command= lambda:self.ButtonClickedinGame('EASY'))
-            self.button.image=photo2
-            self.button.grid(row=2, column=col)
-            self.buttonList.append(self.button)
-
-            photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
-            photo3 = photo3.subsample(3,3)
-            self.button=Button(self, image=photo3, command= lambda:self.ButtonClickedinGame('MEDIUM'))
-            self.button.image=photo3
-            self.button.grid(row=3, column=col)
-            self.buttonList.append(self.button)
-
-            photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
-            photo4 = photo4.subsample(3,3)
-            self.button=Button(self, image=photo4, command= lambda:self.ButtonClickedinGame('HARD'))
-            self.button.image=photo4
-            self.button.grid(row=4, column=col)
-            self.buttonList.append(self.button)
-
-            photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
-            photo5 = photo5.subsample(3,3)
-            self.button=Button(self, image=photo5, command= lambda:self.ButtonClickedinGame('HARD'))
-            self.button.image=photo5
-            self.button.grid(row=5, column=col)
-            self.buttonList.append(self.button)
-
         self.categoryList=[]
         col=0
         for item in categories:
             self.category_label=Label(self, bg="#000383",relief=RAISED,borderwidth=3, text=item,fg="white", font=("Baskerville Old Face", 18),height=3, width=10, wraplength=90, justify=CENTER)
             self.category_label.grid(row=0, column=col)
-            self.categoryList.append(self.category_label)
+            self.categoryList.append((col+1, item, self.category_label))
             col += 1
 
-        self.ALLquestionanswers={}
-        self.EASYquestionanswers = {}
-        self.MEDIUMquestionanswers= {}
-        self.HARDquestionanswers={}
+        self.makingbuttons()
+
+
+    def makingbuttons(self):
+        self.buttonList= []
+        ##Making The Jeopardy Boxes
+        ################Catagory 1
+        
+        photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
+        photo1 = photo1.subsample(3,3)
+        self.button=Button(self, image=photo1, command= lambda: self.ButtonClickedinGame('EASY', "1", "200"))
+        self.button.image=photo1
+        self.button.grid(row=1, column=0)
+        self.buttonList.append((0,"200", self.button))
+
+        photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
+        photo2 = photo2.subsample(3,3)
+        self.button=Button(self, image=photo2, command= lambda:self.ButtonClickedinGame('EASY', "1", "400"))
+        self.button.image=photo2
+        self.button.grid(row=2, column=0)
+        self.buttonList.append((0,"400",self.button))
+
+        photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
+        photo3 = photo3.subsample(3,3)
+        self.button=Button(self, image=photo3, command= lambda:self.ButtonClickedinGame('MEDIUM', "1", "600"))
+        self.button.image=photo3
+        self.button.grid(row=3, column=0)
+        self.buttonList.append((0, "600",self.button))
+
+        photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
+        photo4 = photo4.subsample(3,3)
+        self.button=Button(self, image=photo4, command= lambda:self.ButtonClickedinGame('HARD',"1", "800"))
+        self.button.image=photo4
+        self.button.grid(row=4, column=0)
+        self.buttonList.append((0,"800",self.button))
+
+        photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
+        photo5 = photo5.subsample(3,3)
+        self.button=Button(self, image=photo5, command= lambda:self.ButtonClickedinGame('HARD',"1", "1000"))
+        self.button.image=photo5
+        self.button.grid(row=5, column=0)
+        self.buttonList.append((0, "1000",self.button))
+
+################Catagory 2
+        photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
+        photo1 = photo1.subsample(3,3)
+        self.button=Button(self, image=photo1, command= lambda: self.ButtonClickedinGame('EASY',"2", "200"))
+        self.button.image=photo1
+        self.button.grid(row=1, column=1)
+        self.buttonList.append((1, "200",self.button))
+
+        photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
+        photo2 = photo2.subsample(3,3)
+        self.button=Button(self, image=photo2, command= lambda:self.ButtonClickedinGame('EASY',"2", "400"))
+        self.button.image=photo2
+        self.button.grid(row=2, column=1)
+        self.buttonList.append((1,"400",self.button))
+
+        photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
+        photo3 = photo3.subsample(3,3)
+        self.button=Button(self, image=photo3, command= lambda:self.ButtonClickedinGame('MEDIUM',"2", "600"))
+        self.button.image=photo3
+        self.button.grid(row=3, column=1)
+        self.buttonList.append((1, "600",self.button))
+
+        photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
+        photo4 = photo4.subsample(3,3)
+        self.button=Button(self, image=photo4, command= lambda:self.ButtonClickedinGame('HARD',"2", "800"))
+        self.button.image=photo4
+        self.button.grid(row=4, column=1)
+        self.buttonList.append((1,"800",self.button))
+
+        photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
+        photo5 = photo5.subsample(3,3)
+        self.button=Button(self, image=photo5, command= lambda:self.ButtonClickedinGame('HARD',"2", "1000"))
+        self.button.image=photo5
+        self.button.grid(row=5, column=1)
+        self.buttonList.append((1, "1000",self.button))
+
+################Catagory 3
+        photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
+        photo1 = photo1.subsample(3,3)
+        self.button=Button(self, image=photo1, command= lambda: self.ButtonClickedinGame('EASY',"3", "200"))
+        self.button.image=photo1
+        self.button.grid(row=1, column=2)
+        self.buttonList.append((2,"200", self.button))
+
+        photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
+        photo2 = photo2.subsample(3,3)
+        self.button=Button(self, image=photo2, command= lambda:self.ButtonClickedinGame('EASY',"3", "400"))
+        self.button.image=photo2
+        self.button.grid(row=2, column=2)
+        self.buttonList.append((2,"400",self.button))
+
+        photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
+        photo3 = photo3.subsample(3,3)
+        self.button=Button(self, image=photo3, command= lambda:self.ButtonClickedinGame('MEDIUM',"3", "600"))
+        self.button.image=photo3
+        self.button.grid(row=3, column=2)
+        self.buttonList.append((2, "600",self.button))
+
+        photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
+        photo4 = photo4.subsample(3,3)
+        self.button=Button(self, image=photo4, command= lambda:self.ButtonClickedinGame('HARD',"3", "800"))
+        self.button.image=photo4
+        self.button.grid(row=4, column=2)
+        self.buttonList.append((2,"800",self.button))
+
+        photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
+        photo5 = photo5.subsample(3,3)
+        self.button=Button(self, image=photo5, command= lambda:self.ButtonClickedinGame('HARD',"3", "1000"))
+        self.button.image=photo5
+        self.button.grid(row=5, column=2)
+        self.buttonList.append((2, "1000",self.button))
+
+################Catagory 4
+        photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
+        photo1 = photo1.subsample(3,3)
+        self.button=Button(self, image=photo1, command= lambda: self.ButtonClickedinGame('EASY',"4", "200"))
+        self.button.image=photo1
+        self.button.grid(row=1, column=3)
+        self.buttonList.append((3,"200", self.button))
+
+        photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
+        photo2 = photo2.subsample(3,3)
+        self.button=Button(self, image=photo2, command= lambda:self.ButtonClickedinGame('EASY',"4", "400"))
+        self.button.image=photo2
+        self.button.grid(row=2, column=3)
+        self.buttonList.append((3,"400", self.button))
+
+        photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
+        photo3 = photo3.subsample(3,3)
+        self.button=Button(self, image=photo3, command= lambda:self.ButtonClickedinGame('MEDIUM',"4", "600"))
+        self.button.image=photo3
+        self.button.grid(row=3, column=3)
+        self.buttonList.append((3, "600", self.button))
+
+        photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
+        photo4 = photo4.subsample(3,3)
+        self.button=Button(self, image=photo4, command= lambda:self.ButtonClickedinGame('HARD',"4", "800"))
+        self.button.image=photo4
+        self.button.grid(row=4, column=3)
+        self.buttonList.append((3,"800", self.button))
+
+        photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
+        photo5 = photo5.subsample(3,3)
+        self.button=Button(self, image=photo5, command= lambda:self.ButtonClickedinGame('HARD', "4", "1000"))
+        self.button.image=photo5
+        self.button.grid(row=5, column=3)
+        self.buttonList.append((3, "1000", self.button))
+
+################Catagory 5
+        photo1 = PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/200dollars.gif")
+        photo1 = photo1.subsample(3,3)
+        self.button=Button(self, image=photo1, command= lambda: self.ButtonClickedinGame('EASY',"5", "200"))
+        self.button.image=photo1
+        self.button.grid(row=1, column=4)
+        self.buttonList.append((4,"200", self.button))
+
+        photo2= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/400dollars.gif")
+        photo2 = photo2.subsample(3,3)
+        self.button=Button(self, image=photo2, command= lambda:self.ButtonClickedinGame('EASY',"5", "400"))
+        self.button.image=photo2
+        self.button.grid(row=2, column=4)
+        self.buttonList.append((4,"400",self.button))
+
+        photo3= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/600dollars.gif")
+        photo3 = photo3.subsample(3,3)
+        self.button=Button(self, image=photo3, command= lambda:self.ButtonClickedinGame('MEDIUM',"5", "600"))
+        self.button.image=photo3
+        self.button.grid(row=3, column=4)
+        self.buttonList.append((4,"600", self.button))
+
+        photo4= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/800dollars.gif")
+        photo4 = photo4.subsample(3,3)
+        self.button=Button(self, image=photo4, command= lambda:self.ButtonClickedinGame('HARD', "5", "800"))
+        self.button.image=photo4
+        self.button.grid(row=4, column=4)
+        self.buttonList.append((4,"800",self.button))
+
+        photo5= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/1000dollars.gif")
+        photo5 = photo5.subsample(3,3)
+        self.button=Button(self, image=photo5, command= lambda:self.ButtonClickedinGame('HARD', "5", "1000"))
+        self.button.image=photo5
+        self.button.grid(row=5, column=4)
+        self.buttonList.append((4, "1000", self.button))
+################
+
+                    
+##category selected and now question is being asked
+    def ButtonClickedinGame(self, diff, categ, dollar):
+        try:
+            for item in self.buttonList:
+                item[2].grid_remove()
+            for item in self.categoryList:
+                item[2].grid_remove()
+            self.mainmenu.grid_forget()
+
+            self.scoreboard.place_forget()
+            self.scoreteam1.place_forget()
+            self.scoreteam2.place_forget()
+            self.scoreteam3.place_forget()
+            self.scoreteam4.place_forget()
+
+            for item in self.categoryList:
+                if str(item[0]) == str(categ):
+                    selectedCategory = item[1]
+
+            possible_questions=[]
+            questions=[]
+            question_asked=''
+            for item in self.questionanswer:
+                category = item[1]
+                question = item[2]
+                answer = item[3]
+                difficulty = item[4]
+
+                if diff == difficulty and category == selectedCategory:
+                    possible_questions.append(item)
+                    
+            for item in possible_questions:
+                category = item[1]
+                question = item[2]
+                answer = item[3]
+                difficulty = item[4]
+
+                questions.append(question)
+
+            question_asked = random.choice(questions)
+
+            self.selectedquestion=Label(self, text= question_asked, font=("Baskerville Old Face", 24, "bold"), fg="white", bg="#000383", width= 45, height=11, wraplength=500, justify=CENTER, relief=GROOVE, bd=5)
+            self.selectedquestion.place(x=20, y=25)
+
+            self.showAnswer= Button(self, text='Show Answer', font=('Ariel', 18), width=12, command= lambda: self.checkAnswer(question_asked, diff, categ, dollar))
+            self.showAnswer.place(x=220, y=360)
+
+        except IndexError:
+            self.PlayGame()
+
+##showing the correct answer and giving points to a team
+
+    def checkAnswer(self, questionans, diff, categ, dollar):
+        for item in self.questionanswer:
+            if item[2] == questionans:
+                self.selectedquestion.config(text=item[3])
+        self.showAnswer.place_forget()
 
         for item in self.questionanswer:
-            question = item[2]
-            answer = item[3]
-            difficulty = item[4]
-            
-            if difficulty == 'EASY':
-                if question not in self.EASYquestionanswers:
-                    self.EASYquestionanswers[question]= answer
-                    self.ALLquestionanswers[question]=answer
-                    
-            if difficulty == 'MEDIUM':
-                if question not in self.MEDIUMquestionanswers:
-                    self.MEDIUMquestionanswers[question]= answer
-                    self.ALLquestionanswers[question]=answer
-                    
-            if difficulty == 'HARD':
-                if question not in self.HARDquestionanswers:
-                    self.HARDquestionanswers[question]= answer
-                    self.ALLquestionanswers[question]=answer
-                    
-        
-    def ButtonClickedinGame(self, difficulty):
-        for item in self.buttonList:
-            item.grid_forget()
-        for item in self.categoryList:
-            item.grid_forget()
-        self.mainmenu.grid_forget()
-
-        self.scoreboard.place_forget()
-        self.scoreteam1.place_forget()
-        self.scoreteam2.place_forget()
-        self.scoreteam3.place_forget()
-        self.scoreteam4.place_forget()
-
-        question_asked=''
-        if difficulty == 'EASY':
-            question_asked= random.choice(self.EASYquestionanswers.keys())
-        if difficulty == 'MEDIUM':
-            question_asked= random.choice(self.MEDIUMquestionanswers.keys())
-        if difficulty == 'HARD':
-            question_asked= random.choice(self.HARDquestionanswers.keys())
-        
-        self.selectedquestion=Label(self, text= question_asked, font=("Baskerville Old Face", 24, "bold"), fg="white", bg="#000383", width= 45, height=11, wraplength=500, justify=CENTER, relief=GROOVE, bd=5)
-        self.selectedquestion.place(x=20, y=25)
-
-##        self.answerSlotLabel=Label(self, text="Answer:")
-##        self.answerSlotLabel.place(x=50, y=350)
-##
-##        self.answerSlot=Entry(self)
-##        self.answerSlot.place(x=110, y=349)
-##        self.answerSlot.bind('<Return>', self.checkAnswer)
-##
-##        self.answerSlotButton = Button(self, text="Enter")
-##        self.answerSlotButton.place(x=302, y=349)
-##        self.answerSlotButton.bind('<Button>', self.checkAnswer)
-
-        self.showAnswer= Button(self, text='Show Answer', font=('Ariel', 18), width=12, command= lambda: self.checkAnswer(question_asked))
-        self.showAnswer.place(x=220, y=360)
-
-        self.mainmenu=Button(self)
-        self.mainmenu['text']= "Back to Main Menu"
-        self.mainmenu["command"] = lambda:self.back_to()
-        self.mainmenu.place(x=375, y=430)
-
-
-    def checkAnswer(self, questionans):
-        self.selectedquestion.config(text="{questionans}".format(questionans=self.ALLquestionanswers[questionans]))
-        self.showAnswer.place_forget()
+            item[2], questionans
+            if item[2] == questionans:
+                self.questionanswer.remove(item)
 
         self.winningTeam=Label(self, text= "Which team got the answer right?")
         self.winningTeam.place(x=195, y=340)
@@ -348,6 +505,12 @@ class MainMenu(BaseFrame):
         self.team4=Button(self, text="Team 4", command= lambda: self.correctanswer('4'))
         self.team4.place(x=320, y=390)
 
+        photo= PhotoImage(file="/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Images/Clicked.gif")
+        photo= photo.subsample(3,3)
+        for item in self.buttonList:
+            if item[0] == int(categ)-1 and item[1] == dollar:
+                item[2].config(image=photo)
+        
     def correctanswer(self, team):
         if team == '1':
             curscore = self.scoreboardDICT['Team 1']
@@ -369,6 +532,7 @@ class MainMenu(BaseFrame):
             newscore = int(curscore) +1
             self.scoreboardDICT['Team 4'] = newscore
 
+
         self.PlayGame()
         
     
@@ -382,15 +546,6 @@ class TopicsPage(BaseFrame):
 ## adding a new topic to the game
 
     def addTABLEToDatabase(self, event):
-##        info=[]
-##        for entry in self.entries:
-##            info.append(entry.get())
-##
-##        newtopicinput = info[0]
-##        newcategoryinput=info[1]
-##        newquestioninput=info[2]
-##        newanswerinput=info[3]
-
         userInput=self.inputItemEntry.get()
         NewTopicName = userInput.replace(" ", "_")
 
@@ -414,12 +569,7 @@ class TopicsPage(BaseFrame):
         self.label.after(2000, self.clear_label)
         self.updateList(AvailableTopics, "Select a topic...")
 
-##        entry=self.entries[0]
-##        entry.pack_forget()
-##        label=self.labels[0]
-##        label["text"]=newtopicinput
-##        label.config(font=("Helvetica", 18, "bold"), fg="black")
-
+##edit catagory/question/answer/difficulty already in database
 
     def editTOPICinDatabase(self):
         oldCategory = self.item['values'][0]
@@ -454,6 +604,8 @@ class TopicsPage(BaseFrame):
         self.tree.insert('', 'end', values=(newCategory, newQuestion, newAnswer, newDifficulty))
 
         popupframe.destroy()
+
+##adding new catagory/question/answer/difficulty to exsisting topic
 
     def addTOPICinDatabase(self):
         userInput=self.categoryAdd.get()
@@ -508,6 +660,8 @@ class TopicsPage(BaseFrame):
             
         except IndexError:
             pass
+
+##delete catagory/question/answer/difficulty 
 
     def delete_question(self):
         try:
@@ -688,6 +842,7 @@ class TopicsPage(BaseFrame):
         self.mainmenu.pack(side="bottom", anchor=SE)
 
 ## going back to previous frames with their widgets
+        
     def back_to_topicpage(self, frame):
         try:
             self.scrollbar.place_forget()
@@ -905,28 +1060,7 @@ class TopicsPage(BaseFrame):
 
         self.popup("Edit")
         
-
-################################################################################
-##
-##class Difficulty(BaseFrame):
-##    def create_widgets(self):
-##        self.easybutton = Button(self)
-##        self.easybutton["text"]= "EASY"
-##        self.easybutton["command"]= lambda: self.controller.show_frame(PlayGame)
-##        self.easybutton.grid(row=1, column=0)
-##
-##        self.mediumbutton = Button(self)
-##        self.mediumbutton["text"]= "MEDIUM"
-##        self.mediumbutton["command"]= lambda: self.controller.show_frame(PlayGame)
-##        self.mediumbutton.grid(row=2, column=0)
-##
-##        self.hardbutton = Button(self)
-##        self.hardbutton["text"]= "HARD"
-##        self.hardbutton["command"]= lambda: self.controller.show_frame(PlayGame)
-##        self.hardbutton.grid(row=3, column=0)
-##
-################################################################################
-        
+############################END#####################################################       
 conn=sqlite3.connect("/Users/ashleyrojas/Desktop/Program_Project_Seminar_for_Minors/Myth_and_Arch_Jeopardy_Database.db")
 cursor = conn.cursor()
 
